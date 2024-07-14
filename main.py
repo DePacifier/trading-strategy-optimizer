@@ -39,7 +39,9 @@ def main():
         param_ranges={
             'MovingAverageCrossover': [
                 {'name': 'short_window', 'type': 'int', 'low': 5, 'high': 50},
-                {'name': 'long_window', 'type': 'int', 'low': 10, 'high': 200}
+                {'name': 'long_window', 'type': 'int', 'low': 10, 'high': 200},
+                {'name': 'stop_loss_pct', 'type': 'float', 'low': 0.01, 'high': 0.1},
+                {'name': 'take_profit_pct', 'type': 'float', 'low': 0.01, 'high': 0.2}
             ],
             # 'RSIStrategy': [(5, 30), (20, 40), (60, 80)],
             # 'BollingerBandsStrategy': [(10, 50), (1, 3)]
