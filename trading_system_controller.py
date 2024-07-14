@@ -1,0 +1,53 @@
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+class TradingSystemController:
+    def __init__(self, data_loader, strategy_manager, optimizer, result_analyzer):
+        self.data_loader = data_loader
+        self.strategy_manager = strategy_manager
+        self.optimizer = optimizer
+        self.result_analyzer = result_analyzer
+        self.data = None
+        self.current_strategy_class = None
+
+    def objective_function(self, params):
+        strategy = self.current_strategy_class(*params)
+        self.strategy_manager.reset(self.data)
+        self.strategy_manager.execute_strategy(strategy)
+        return self.result_analyzer.calculate_sharpe_ratio(self.strategy_manager.trades)
+
+    def run(self, symbol, interval, start_time, end_time, strategies, param_ranges, n_iterations):
+        logging.info("Starting trading system optimization")
+
+        # Load data
+        logging.info(f"Loading historical data for {symbol}")
+        self.data = self.data_loader.fetch_historical_data(symbol, interval, start_time, end_time)
+
+        best_results = {}
+        for strategy_class in strategies:
+            logging.info(f"Optimizing {strategy_class.__name__}")
+            self.current_strategy_class = strategy_class
+
+            best_params = self.optimizer.optimize(
+                self.objective_function,
+                param_ranges[strategy_class.__name__],
+                n_iterations
+            )
+            
+            print("Identified best parameters are:")
+            print(best_params)
+            
+            best_strategy = strategy_class(*best_params)
+
+            self.strategy_manager.reset(self.data)
+            self.strategy_manager.execute_strategy(best_strategy)
+
+            performance = self.result_analyzer.analyze(self.strategy_manager.trades)
+            best_results[strategy_class.__name__] = {
+                'params': best_params,
+                'performance': performance
+            }
+
+        logging.info("Optimization completed")
+        return best_results
