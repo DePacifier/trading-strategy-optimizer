@@ -31,15 +31,18 @@ def main():
     controller = TradingSystemController(data_loader, strategy_manager, parallel_hybrid_optimizer, result_analyzer)
     best_results = controller.run(
         symbol='BTCUSDT',
-        interval=Client.KLINE_INTERVAL_1HOUR,
+        interval=Client.KLINE_INTERVAL_4HOUR,
         start_time="1 Jan, 2020",
         end_time="1 Jan, 2021",
         # strategies=[MovingAverageCrossover, RSIStrategy, BollingerBandsStrategy],
         strategies=[MovingAverageCrossover],
         param_ranges={
-            'MovingAverageCrossover': [(5, 50), (10, 200)],
-            'RSIStrategy': [(5, 30), (20, 40), (60, 80)],
-            'BollingerBandsStrategy': [(10, 50), (1, 3)]
+            'MovingAverageCrossover': [
+                {'name': 'short_window', 'type': 'int', 'low': 5, 'high': 50},
+                {'name': 'long_window', 'type': 'int', 'low': 10, 'high': 200}
+            ],
+            # 'RSIStrategy': [(5, 30), (20, 40), (60, 80)],
+            # 'BollingerBandsStrategy': [(10, 50), (1, 3)]
         },
         n_iterations=100
     )
