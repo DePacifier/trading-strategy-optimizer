@@ -7,7 +7,7 @@ class ParallelHybridOptimizer(Optimizer):
         self.pso_optimizer = pso_optimizer
         self.bayesian_optimizer = bayesian_optimizer
         self.de_optimizer = differential_optimizer
-        self.n_processes = n_processes or mp.cpu_count()
+        self.n_processes = n_processes or 20
 
     def optimize(self, objective_function, param_ranges, n_iterations):
         with mp.Pool(processes=self.n_processes) as pool:
