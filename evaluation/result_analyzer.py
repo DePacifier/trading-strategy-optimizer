@@ -7,7 +7,7 @@ class ResultAnalyzer:
         if len(returns) < 2:
             return -np.inf
         
-        annual_factor = 252  # Assuming 252 trading days in a year
+        annual_factor = 365  # Assuming 252 trading days in a year
         returns_mean = np.mean(returns)
         returns_std = np.std(returns)
         
@@ -23,7 +23,7 @@ class ResultAnalyzer:
         if len(returns) < 2:
             return -np.inf
         
-        annual_factor = 252  # Assuming 252 trading days in a year
+        annual_factor = 365  # Assuming 252 trading days in a year
         returns_mean = np.mean(returns)
         downside_returns = [r for r in returns if r < 0]
         downside_std = np.std(downside_returns) if len(downside_returns) > 1 else 0
@@ -51,6 +51,11 @@ class ResultAnalyzer:
                 max_drawdown = drawdown
         
         return max_drawdown
+    
+    def calculate_win_loss_ratio(self, trades):
+        wins = sum(1 for trade in trades if trade.profit_loss is not None and trade.profit_loss > 0)
+        losses = sum(1 for trade in trades if trade.profit_loss is not None and trade.profit_loss <= 0)
+        return wins / losses if losses > 0 else float('inf')
 
     def analyze(self, trades):
         if not trades:
@@ -61,7 +66,8 @@ class ResultAnalyzer:
                 'total_return': 0,
                 'sharpe_ratio': -np.inf,
                 'sortino_ratio': -np.inf,
-                'max_drawdown': 0
+                'max_drawdown': 0,
+                'win_loss_ratio': 0
             }
 
         total_trades = len(trades)
@@ -78,7 +84,8 @@ class ResultAnalyzer:
             'total_return': total_return,
             'sharpe_ratio': self.calculate_sharpe_ratio(trades),
             'sortino_ratio': self.calculate_sortino_ratio(trades),
-            'max_drawdown': self.calculate_max_drawdown(trades)
+            'max_drawdown': self.calculate_max_drawdown(trades),
+            'win_loss_ratio': self.calculate_win_loss_ratio(trades)
         }
         
         return performance

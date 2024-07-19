@@ -10,12 +10,21 @@ class TradingSystemController:
         self.result_analyzer = result_analyzer
         self.data = None
         self.current_strategy_class = None
+        self.objectives = ['sharpe_ratio']
+    
+    def set_objectives(self, objectives):
+        self.objectives = objectives
 
     def objective_function(self, params):
         strategy = self.current_strategy_class(*params)
         self.strategy_manager.reset(self.data)
         self.strategy_manager.execute_strategy(strategy)
-        return self.result_analyzer.calculate_sharpe_ratio(self.strategy_manager.trades)
+        performance = self.result_analyzer.analyze(self.strategy_manager.trades)
+        
+        if len(self.objectives) == 1:
+            return performance[self.objectives[0]]
+        else:
+            return [-performance[obj] for obj in self.objectives] 
 
     def run(self, symbol, interval, start_time, end_time, strategies, param_ranges, n_iterations):
         logging.info("Starting trading system optimization")

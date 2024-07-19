@@ -1,4 +1,5 @@
 import multiprocessing as mp
+import numpy as np
 from .optimizer import Optimizer
 
 class ParallelHybridOptimizer(Optimizer):
@@ -7,7 +8,7 @@ class ParallelHybridOptimizer(Optimizer):
         self.pso_optimizer = pso_optimizer
         self.bayesian_optimizer = bayesian_optimizer
         self.de_optimizer = differential_optimizer
-        self.n_processes = n_processes or 20
+        self.n_processes = n_processes or 10
 
     def optimize(self, objective_function, param_ranges, n_iterations):
         with mp.Pool(processes=self.n_processes) as pool:
@@ -15,9 +16,16 @@ class ParallelHybridOptimizer(Optimizer):
             print("Started GA Optimization")
             ga_results = pool.starmap(self.ga_optimizer.optimize, 
                                       [(objective_function, param_ranges, n_iterations // 3)] * self.n_processes)
-            ga_results.sort(key=objective_function, reverse=True)
-            # ga_best = max(ga_results, key=objective_function)
-            ga_best = ga_results[:5]
+            
+            # Handle multi-objective results
+            if isinstance(ga_results[0][0], (list, np.ndarray)):
+                ga_results.sort(key=lambda x: np.sum(x), reverse=True)
+                ga_best = ga_results[:5]
+            else:
+                ga_results.sort(key=objective_function, reverse=True)
+                ga_best = ga_results[:5]
+                
+                
             print("Finished GA Optimization\nResult:\n", ga_best)
 
             # print("Finished GA Optimization\nResult:\n", ga_best)
@@ -42,14 +50,24 @@ class ParallelHybridOptimizer(Optimizer):
             print("Started Differential Optimization")
             de_results = pool.starmap(self.de_optimizer.optimize, 
                                        [(objective_function, param_ranges, n_iterations // 3, ga_best)] * self.n_processes)
-            de_best = max(de_results, key=objective_function)
+            # Handle multi-objective results
+            if isinstance(de_results[0][0], (list, np.ndarray)):
+                de_best = min(de_results, key=lambda x: np.sum(x))
+            else:
+                de_best = max(de_results, key=objective_function)
             print("Finished Differential Optimization\nResult:\n", de_best)
 
             # Parallel Bayesian optimization
             print("Started Bayesian Optimization")
             bayesian_results = pool.starmap(self.bayesian_optimizer.optimize, 
                                             [(objective_function, param_ranges, n_iterations // 3, list(de_best))] * self.n_processes)
-            final_best = max(bayesian_results, key=objective_function)
+            
+            # Handle multi-objective results
+            if isinstance(bayesian_results[0][0], (list, np.ndarray)):
+                final_best = min(bayesian_results, key=lambda x: np.sum(x))
+            else:
+                final_best = max(bayesian_results, key=objective_function)
+            
             print("Finished Bayesian Optimization\nResult:\n", final_best)
 
         return final_best

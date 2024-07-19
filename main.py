@@ -32,9 +32,13 @@ def main():
 
     # Create and run the controller
     controller = TradingSystemController(data_loader, strategy_manager, parallel_hybrid_optimizer, result_analyzer)
+    
+    # Set multiple objectives
+    controller.set_objectives(['win_loss_ratio'])
+    
     best_results = controller.run(
         symbol='BTCUSDT',
-        interval=Client.KLINE_INTERVAL_4HOUR,
+        interval=Client.KLINE_INTERVAL_1DAY,
         start_time="1 Jan, 2023",
         end_time="14 July, 2024",
         strategies=[WilliamsFractals],
