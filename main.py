@@ -15,8 +15,8 @@ from binance.client import Client
 
 def main():
     # Initialize components
-    api_key = "J3xAHx96UXy2TbX1JqcMXEJwkLPujKI5akWHzYgZPTNKw1uPCHTD7qzrciQ3tQaD"
-    api_secret = "b5NUms8Jus85y278SxtnFSDZbwjU6p8sLYrO1C866qaqcN8Rs4HcOBuzsf2Jfyng"
+    api_key = "Binance API KEY"
+    api_secret = "Binance API Secret"
     data_loader = DataLoader(api_key, api_secret)
     strategy_manager = StrategyManager(None)
     ga_optimizer = GeneticAlgorithmOptimizer()
