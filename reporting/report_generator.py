@@ -9,7 +9,7 @@ class ReportGenerator:
     def __init__(self):
         self.styles = getSampleStyleSheet()
 
-    def generate_report(self, best_results, filename="trading_system_report.pdf"):
+    def generate_report(self, best_results, filename="reports/trading_system_report.pdf"):
         doc = SimpleDocTemplate(filename, pagesize=letter)
         elements = []
 
