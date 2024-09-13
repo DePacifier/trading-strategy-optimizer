@@ -26,7 +26,12 @@ def convert_to_eat(datetime_str):
     except ValueError:
         # Handle cases where the datetime_str is not in the expected format
         return ""
+    
+def ffloat(value):
+    try:
+        return round(float(value), 2)
+    except Exception:
+        return None
 
-# Example usage
-print(convert_to_eat("2023-01-11 00:00:00"))  # Output should be: 11/1/23 3:00 (since EAT is UTC+3)
-print(convert_to_eat(None))
+def fpos(value: int):
+    return "LONG ∆" if value == 1 else "SHORT ∇"

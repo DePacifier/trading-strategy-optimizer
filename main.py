@@ -14,6 +14,7 @@ from strategies.bollinger_bands_strategy import BollingerBandsStrategy
 from strategies.macd_rsi import MACD_RSIStrategy
 from strategies.exponential_moving_average import EMACrossover
 from strategies.william_fractals import WilliamsFractals
+from strategies.macd_rsi_cmf import MACD_RSI_CMF_Strategy
 from binance.client import Client
 
 def main():
@@ -34,18 +35,19 @@ def main():
     controller = TradingSystemController(data_loader, strategy_manager, parallel_hybrid_optimizer, result_analyzer)
     
     # Set multiple objectives
-    controller.set_objectives(['win_loss_ratio'])
+    controller.set_objectives(['total_return'])
     
     best_results = controller.run(
         symbol='BTCUSDT',
-        interval=Client.KLINE_INTERVAL_1DAY,
-        start_time="1 Jan, 2023",
-        end_time="14 July, 2024",
-        strategies=[WilliamsFractals],
+        interval=Client.KLINE_INTERVAL_4HOUR,
+        start_time="1 Jan, 2022",
+        end_time="20 July, 2024",
+        # strategies=[MACD_RSI_CMF_Strategy],
+        strategies=[MACD_RSIStrategy],
         param_ranges={
             'MovingAverageCrossover': [
-                {'name': 'short_window', 'type': 'int', 'low': 5, 'high': 50},
-                {'name': 'long_window', 'type': 'int', 'low': 10, 'high': 200},
+                {'name': 'short_window', 'type': 'int', 'low': 5, 'high': 10},
+                {'name': 'long_window', 'type': 'int', 'low': 5, 'high': 10},
                 {'name': 'stop_loss_pct', 'type': 'int', 'low': 1, 'high': 2},
                 {'name': 'take_profit_pct', 'type': 'int', 'low': 1, 'high': 4}
             ],
@@ -57,7 +59,18 @@ def main():
                 {'name': 'rsi_overbought', 'type': 'int', 'low': 70, 'high': 90},
                 {'name': 'rsi_oversold', 'type': 'int', 'low': 10, 'high': 30},
                 {'name': 'stop_loss_pct', 'type': 'int', 'low': 1, 'high': 2},
-                {'name': 'take_profit_pct', 'type': 'int', 'low': 1, 'high': 10}
+                {'name': 'take_profit_pct', 'type': 'int', 'low': 1, 'high': 4}
+            ],
+            'MACD_RSI_CMF_Strategy': [
+                {'name': 'macd_short_window', 'type': 'int', 'low': 5, 'high': 20},
+                {'name': 'macd_long_window', 'type': 'int', 'low': 20, 'high': 50},
+                {'name': 'macd_signal_window', 'type': 'int', 'low': 5, 'high': 15},
+                {'name': 'rsi_window', 'type': 'int', 'low': 10, 'high': 30},
+                {'name': 'rsi_overbought', 'type': 'int', 'low': 70, 'high': 90},
+                {'name': 'rsi_oversold', 'type': 'int', 'low': 10, 'high': 30},
+                {'name': 'cmf_window', 'type': 'int', 'low': 10, 'high': 40},
+                {'name': 'stop_loss_pct', 'type': 'int', 'low': 1, 'high': 2},
+                {'name': 'take_profit_pct', 'type': 'int', 'low': 1, 'high': 4}
             ],
             'WilliamsFractals': [
                 {'name': 'period', 'type': 'int', 'low': 2, 'high': 4},

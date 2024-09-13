@@ -4,7 +4,7 @@ from utils.enums import TradeAction
 
 class MovingAverageCrossover(Strategy):
     def __init__(self, short_window, long_window, stop_loss_pct, take_profit_pct):
-        super().__init__(stop_loss_pct / 100, take_profit_pct / 100)
+        super().__init__(stop_loss_pct, take_profit_pct)
         self.short_window = max(1, int(short_window))
         self.long_window = max(1, int(long_window))
 

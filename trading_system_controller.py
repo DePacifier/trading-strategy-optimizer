@@ -53,9 +53,12 @@ class TradingSystemController:
             self.strategy_manager.execute_strategy(best_strategy)
 
             performance = self.result_analyzer.analyze(self.strategy_manager.trades)
+            best_params = {param["name"]:best_param for param, best_param in zip(param_ranges[strategy_class.__name__], best_params)}
+            trades = [trade.get_data() for trade in self.strategy_manager.trades]
             best_results[strategy_class.__name__] = {
                 'params': best_params,
-                'performance': performance
+                'performance': performance,
+                'trades': trades
             }
 
         logging.info("Optimization completed")

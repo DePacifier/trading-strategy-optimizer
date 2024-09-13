@@ -4,7 +4,7 @@ from utils.enums import TradeAction
 
 class WilliamsFractals(Strategy):
     def __init__(self, period, fractal_bars, stop_loss_pct, take_profit_pct):
-        super().__init__(stop_loss_pct / 100, take_profit_pct / 100)
+        super().__init__(stop_loss_pct, take_profit_pct)
         self.period = max(2, int(period))
         self.fractal_bars = fractal_bars if fractal_bars in [3, 5] else 3
 
