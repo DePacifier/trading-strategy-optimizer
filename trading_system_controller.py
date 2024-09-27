@@ -23,8 +23,20 @@ class TradingSystemController:
         
         if len(self.objectives) == 1:
             return performance[self.objectives[0]]
+        
         else:
-            return [-performance[obj] for obj in self.objectives] 
+            return [-performance[obj] for obj in self.objectives]
+        
+        # Future Normalization
+        # Normalize each objective metric
+        normalized_performance = {
+            'total_return': performance['total_return'] / 100000,  # Example normalization
+            'sharpe_ratio': performance['sharpe_ratio'] / 2,      # Sharpe ratio normalization
+            'max_drawdown': performance['max_drawdown'] / 0.5,    # Max drawdown normalization
+            # Add normalizations for other objectives
+        }
+        
+        return [-normalized_performance[obj] for obj in self.objectives]
 
     def run(self, symbol, interval, start_time, end_time, strategies, param_ranges, n_iterations):
         logging.info("Starting trading system optimization")

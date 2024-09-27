@@ -7,7 +7,7 @@ class ResultAnalyzer:
         if len(returns) < 2:
             return -np.inf
         
-        annual_factor = 365  # Assuming 252 trading days in a year
+        annual_factor = 365  # Assuming 365 trading days in a year
         returns_mean = np.mean(returns)
         returns_std = np.std(returns)
         
@@ -23,7 +23,7 @@ class ResultAnalyzer:
         if len(returns) < 2:
             return -np.inf
         
-        annual_factor = 365  # Assuming 252 trading days in a year
+        annual_factor = 365  # Assuming 365 trading days in a year
         returns_mean = np.mean(returns)
         downside_returns = [r for r in returns if r < 0]
         downside_std = np.std(downside_returns) if len(downside_returns) > 1 else 0
@@ -80,12 +80,12 @@ class ResultAnalyzer:
         performance = {
             'total_trades': total_trades,
             'profitable_trades': profitable_trades,
-            'win_rate': win_rate,
-            'total_return': total_return,
-            'sharpe_ratio': self.calculate_sharpe_ratio(trades),
-            'sortino_ratio': self.calculate_sortino_ratio(trades),
-            'max_drawdown': self.calculate_max_drawdown(trades),
-            'win_loss_ratio': self.calculate_win_loss_ratio(trades)
+            'win_rate': round(win_rate, 3),
+            'total_return': round(total_return, 2),
+            'sharpe_ratio': round(self.calculate_sharpe_ratio(trades),3),
+            'sortino_ratio': round(self.calculate_sortino_ratio(trades),3),
+            'max_drawdown': round(self.calculate_max_drawdown(trades),3),
+            'win_loss_ratio': round(self.calculate_win_loss_ratio(trades),3)
         }
         
         return performance

@@ -10,6 +10,7 @@ class Trade:
         self.stop_loss = stop_loss
         self.take_profit = take_profit
         self.size = size
+        self.remaining_capital = None
 
     @property
     def profit_loss(self):
@@ -24,9 +25,11 @@ class Trade:
             "position": self.position.value,
             "exit_time": str(self.exit_time),
             "exit_price": self.exit_price,
+            "profit_loss": self.profit_loss,
             "stop_loss": self.stop_loss,
             "take_profit": self.take_profit,
-            "size": self.size
+            "size": self.size,
+            "remaining_capital": self.remaining_capital
         }
 
 class StrategyManager:
@@ -70,12 +73,22 @@ class StrategyManager:
                 self.exit_trade(timestamp)
 
     def enter_trade(self, timestamp, position, stop_loss_pct, take_profit_pct):
-        if self.current_position != Position.NEUTRAL:
+        if self.current_position == position:
+            # Already in the same position, no action needed
+            return
+        elif self.current_position != Position.NEUTRAL:
             self.exit_trade(timestamp)
+            
         self.current_position = position
         entry_price = self.data.loc[timestamp, 'close']
-        stop_loss = entry_price * (1 - stop_loss_pct) if position == Position.LONG else entry_price * (1 + stop_loss_pct)
-        take_profit = entry_price * (1 + take_profit_pct) if position == Position.LONG else entry_price * (1 - take_profit_pct)
+        
+        if position == Position.LONG:
+            stop_loss = entry_price * (1 - stop_loss_pct)
+            take_profit = entry_price * (1 + take_profit_pct)
+        elif position == Position.SHORT:
+            stop_loss = entry_price * (1 + stop_loss_pct)
+            take_profit = entry_price * (1 - take_profit_pct)
+        
         size = self.risk_based_position_sizing(entry_price, stop_loss)
         self.trades.append(Trade(timestamp, entry_price, position, stop_loss, take_profit, size))
 
@@ -83,12 +96,18 @@ class StrategyManager:
         if self.current_position == Position.NEUTRAL:
             return
         exit_price = self.data.loc[timestamp, 'close']
-        self.trades[-1].exit_time = timestamp
-        self.trades[-1].exit_price = exit_price
+        last_trade = self.trades[-1]
+        last_trade.exit_time = timestamp
+        last_trade.exit_price = exit_price
+        
+        self.available_capital += last_trade.profit_loss
+        last_trade.remaining_capital = self.available_capital
+    
         self.current_position = Position.NEUTRAL
         
-    def risk_based_position_sizing(self, entry_price, stop_loss_pct):
+    def risk_based_position_sizing(self, entry_price, stop_loss_price):
         risk_amount = self.available_capital * self.risk_per_trade
-        position_size = risk_amount / stop_loss_pct
+        stop_loss_distance = abs(entry_price - stop_loss_price)
+        position_size = risk_amount / stop_loss_distance
         max_position_size = self.available_capital / entry_price
         return min(position_size, max_position_size)

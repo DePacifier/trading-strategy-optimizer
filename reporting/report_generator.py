@@ -64,8 +64,8 @@ class ReportGenerator:
         # Trades table
         if 'trades' in result:
             elements.append(Paragraph("Trades", self.styles['Heading2']))
-            trade_data = [['Entry Time', 'Entry Price', 'Position', 'Exit Time', 'Exit Price', 'Stop Loss', 'Take Profit', 'Size']] + [
-                [convert_to_eat(trade['entry_time']), ffloat(trade['entry_price']), fpos(trade['position']), convert_to_eat(trade['exit_time']), ffloat(trade['exit_price']), ffloat(trade['stop_loss']), ffloat(trade['take_profit']), ffloat(trade['size'])]
+            trade_data = [['Entry Time', 'Entry Price', 'Position', 'Exit Time', 'Exit Price', 'PROFIT/LOSS', 'Size', "CAPITAL"]] + [
+                [convert_to_eat(trade['entry_time']), ffloat(trade['entry_price']), fpos(trade['position']), convert_to_eat(trade['exit_time']), ffloat(trade['exit_price']), ffloat(trade['profit_loss']), ffloat(trade['size']), ffloat(trade['remaining_capital'])]
                 for trade in result['trades']
             ]
             trade_table = Table(trade_data)

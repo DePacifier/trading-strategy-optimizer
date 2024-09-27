@@ -1,20 +1,10 @@
-from data.data_loader import DataLoader
+from data import DataLoader
 from strategy_manager import StrategyManager
-from optimization.genetic_algorithm import GeneticAlgorithmOptimizer
-from optimization.particle_swarm import ParticleSwarmOptimizer
-from optimization.bayesian_optimization import BayesianOptimizer
-from optimization.hybrid_optimizer import ParallelHybridOptimizer
-from optimization.differential_evolution import DifferentialEvolutionOptimizer
-from evaluation.result_analyzer import ResultAnalyzer
-from reporting.report_generator import ReportGenerator
+from optimization import GeneticAlgorithmOptimizer, ParticleSwarmOptimizer, BayesianOptimizer, ParallelHybridOptimizer, DifferentialEvolutionOptimizer
+from evaluation import ResultAnalyzer
+from reporting import ReportGenerator
 from trading_system_controller import TradingSystemController
-from strategies.moving_average_crossover import MovingAverageCrossover
-from strategies.rsi_strategy import RSIStrategy
-from strategies.bollinger_bands_strategy import BollingerBandsStrategy
-from strategies.macd_rsi import MACD_RSIStrategy
-from strategies.exponential_moving_average import EMACrossover
-from strategies.william_fractals import WilliamsFractals
-from strategies.macd_rsi_cmf import MACD_RSI_CMF_Strategy
+from strategies import VWAP_RSI_MACDStrategy
 from binance.client import Client
 
 def main():
@@ -40,17 +30,10 @@ def main():
     best_results = controller.run(
         symbol='BTCUSDT',
         interval=Client.KLINE_INTERVAL_4HOUR,
-        start_time="1 Jan, 2022",
+        start_time="1 Jan, 2024",
         end_time="20 July, 2024",
-        # strategies=[MACD_RSI_CMF_Strategy],
-        strategies=[MACD_RSIStrategy],
+        strategies=[VWAP_RSI_MACDStrategy],
         param_ranges={
-            'MovingAverageCrossover': [
-                {'name': 'short_window', 'type': 'int', 'low': 5, 'high': 10},
-                {'name': 'long_window', 'type': 'int', 'low': 5, 'high': 10},
-                {'name': 'stop_loss_pct', 'type': 'int', 'low': 1, 'high': 2},
-                {'name': 'take_profit_pct', 'type': 'int', 'low': 1, 'high': 4}
-            ],
             'MACD_RSIStrategy': [
                 {'name': 'macd_short_window', 'type': 'int', 'low': 5, 'high': 20},
                 {'name': 'macd_long_window', 'type': 'int', 'low': 20, 'high': 50},
@@ -58,6 +41,23 @@ def main():
                 {'name': 'rsi_window', 'type': 'int', 'low': 10, 'high': 30},
                 {'name': 'rsi_overbought', 'type': 'int', 'low': 70, 'high': 90},
                 {'name': 'rsi_oversold', 'type': 'int', 'low': 10, 'high': 30},
+                {'name': 'stop_loss_pct', 'type': 'int', 'low': 1, 'high': 2},
+                {'name': 'take_profit_pct', 'type': 'int', 'low': 1, 'high': 4}
+            ],
+            'VWAP_RSI_MACDStrategy': [
+                {'name': 'vwap_window', 'type': 'int', 'low': 5, 'high': 30},
+                {'name': 'rsi_window', 'type': 'int', 'low': 10, 'high': 30},
+                {'name': 'rsi_overbought', 'type': 'float', 'low': 70, 'high': 90},
+                {'name': 'rsi_oversold', 'type': 'float', 'low': 10, 'high': 30},
+                {'name': 'macd_short_window', 'type': 'int', 'low': 5, 'high': 20},
+                {'name': 'macd_long_window', 'type': 'int', 'low': 20, 'high': 50},
+                {'name': 'macd_signal_window', 'type': 'int', 'low': 5, 'high': 15},
+                {'name': 'stop_loss_pct', 'type': 'float', 'low': 1, 'high': 2},
+                {'name': 'take_profit_pct', 'type': 'float', 'low': 1, 'high': 4}
+            ],
+            'MovingAverageCrossover': [
+                {'name': 'short_window', 'type': 'int', 'low': 5, 'high': 10},
+                {'name': 'long_window', 'type': 'int', 'low': 5, 'high': 10},
                 {'name': 'stop_loss_pct', 'type': 'int', 'low': 1, 'high': 2},
                 {'name': 'take_profit_pct', 'type': 'int', 'low': 1, 'high': 4}
             ],
@@ -78,8 +78,6 @@ def main():
                 {'name': 'stop_loss_pct', 'type': 'int', 'low': 1, 'high': 2},
                 {'name': 'take_profit_pct', 'type': 'int', 'low': 1, 'high': 4}
             ]
-            # 'RSIStrategy': [(5, 30), (20, 40), (60, 80)],
-            # 'BollingerBandsStrategy': [(10, 50), (1, 3)]
         },
         n_iterations=100
     )
