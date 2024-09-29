@@ -86,6 +86,10 @@ class ReportGenerator:
                 ('GRID', (0, 0), (-1, -1), 1, colors.black)
             ]))
             elements.append(trade_table)
+            try:
+                result["trades"].to_csv("./data/trades.csv", index=False)
+            except Exception:
+                print("Failed to save trades")
 
         doc.build(elements)
         print(f"Report generated: {filename}")

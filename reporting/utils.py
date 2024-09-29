@@ -29,7 +29,7 @@ def convert_to_eat(datetime_str):
     
 def ffloat(value):
     try:
-        return round(float(value), 2)
+        return round(float(value), 4)
     except Exception:
         return None
 

@@ -95,14 +95,46 @@ class StrategyManager:
     def exit_trade(self, timestamp):
         if self.current_position == Position.NEUTRAL:
             return
-        exit_price = self.data.loc[timestamp, 'close']
-        last_trade = self.trades[-1]
-        last_trade.exit_time = timestamp
-        last_trade.exit_price = exit_price
         
-        self.available_capital += last_trade.profit_loss
-        last_trade.remaining_capital = self.available_capital
+        current_trade = self.trades[-1]
+        close_price = self.data.loc[timestamp, 'close']
+        high_price = self.data.loc[timestamp, 'high']
+        low_price = self.data.loc[timestamp, 'low']
     
+        # For long positions
+        if self.current_position == Position.LONG:
+            # Check if stop-loss is hit
+            if low_price <= current_trade.stop_loss:
+                exit_price = current_trade.stop_loss
+            
+            # Check if take-profit is hit
+            elif high_price >= current_trade.take_profit:
+                exit_price = current_trade.take_profit
+
+            # Handle Edge cases (Gap issues, ...)
+            else:
+                exit_price = close_price
+
+        # For short positions
+        elif self.current_position == Position.SHORT:
+            # Check if stop-loss is hit
+            if high_price >= current_trade.stop_loss:
+                exit_price = current_trade.stop_loss
+
+            # Check if take-profit is hit
+            elif low_price <= current_trade.take_profit:
+                exit_price = current_trade.take_profit
+
+            # Handle Edge cases (Gap issues, ...)
+            else:
+                exit_price = close_price
+                
+        current_trade.exit_time = timestamp
+        current_trade.exit_price = exit_price
+        
+        self.available_capital += current_trade.profit_loss
+        current_trade.remaining_capital = self.available_capital
+        
         self.current_position = Position.NEUTRAL
         
     def risk_based_position_sizing(self, entry_price, stop_loss_price):
