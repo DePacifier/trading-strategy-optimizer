@@ -4,7 +4,7 @@ from optimization import GeneticAlgorithmOptimizer, ParticleSwarmOptimizer, Baye
 from evaluation import ResultAnalyzer
 from reporting import ReportGenerator
 from trading_system_controller import TradingSystemController
-from strategies import VWAP_RSI_MACDStrategy
+from strategies import VWAP_RSI_MACDStrategy, VWAP_RSI_ZeroLagMACDStrategy
 from binance.client import Client
 
 def main():
@@ -28,11 +28,11 @@ def main():
     controller.set_objectives(['total_return'])
     
     best_results = controller.run(
-        symbol='BTCUSDT',
-        interval=Client.KLINE_INTERVAL_4HOUR,
+        symbol='XRPUSDT',
+        interval=Client.KLINE_INTERVAL_1HOUR,
         start_time="1 Jan, 2024",
-        end_time="20 July, 2024",
-        strategies=[VWAP_RSI_MACDStrategy],
+        end_time="27 Sep, 2024",
+        strategies=[VWAP_RSI_ZeroLagMACDStrategy],
         param_ranges={
             'MACD_RSIStrategy': [
                 {'name': 'macd_short_window', 'type': 'int', 'low': 5, 'high': 20},
@@ -47,13 +47,24 @@ def main():
             'VWAP_RSI_MACDStrategy': [
                 {'name': 'vwap_window', 'type': 'int', 'low': 5, 'high': 30},
                 {'name': 'rsi_window', 'type': 'int', 'low': 10, 'high': 30},
-                {'name': 'rsi_overbought', 'type': 'float', 'low': 70, 'high': 90},
-                {'name': 'rsi_oversold', 'type': 'float', 'low': 10, 'high': 30},
+                {'name': 'rsi_overbought', 'type': 'int', 'low': 70, 'high': 90},
+                {'name': 'rsi_oversold', 'type': 'int', 'low': 10, 'high': 30},
                 {'name': 'macd_short_window', 'type': 'int', 'low': 5, 'high': 20},
                 {'name': 'macd_long_window', 'type': 'int', 'low': 20, 'high': 50},
                 {'name': 'macd_signal_window', 'type': 'int', 'low': 5, 'high': 15},
                 {'name': 'stop_loss_pct', 'type': 'float', 'low': 1, 'high': 2},
                 {'name': 'take_profit_pct', 'type': 'float', 'low': 1, 'high': 4}
+            ],
+            'VWAP_RSI_ZeroLagMACDStrategy': [
+                {'name': 'vwap_window', 'type': 'int', 'low': 5, 'high': 30},
+                {'name': 'rsi_window', 'type': 'int', 'low': 7, 'high': 21},
+                {'name': 'rsi_overbought', 'type': 'int', 'low': 65, 'high': 85},
+                {'name': 'rsi_oversold', 'type': 'int', 'low': 15, 'high': 35},
+                {'name': 'macd_fast_length', 'type': 'int', 'low': 5, 'high': 15},
+                {'name': 'macd_slow_length', 'type': 'int', 'low': 10, 'high': 30},
+                {'name': 'macd_signal_length', 'type': 'int', 'low': 3, 'high': 12},
+                {'name': 'stop_loss_pct', 'type': 'float', 'low': 1, 'high': 3},
+                {'name': 'take_profit_pct', 'type': 'float', 'low': 1, 'high': 6}
             ],
             'MovingAverageCrossover': [
                 {'name': 'short_window', 'type': 'int', 'low': 5, 'high': 10},
@@ -83,7 +94,9 @@ def main():
     )
 
     # Generate the report
-    report_generator.generate_report(best_results)
+    file_name = "XRPUSDT-Jan-Sep-24-1HR-nolag"
+    report_generator.generate_report(best_results, filename=f"{file_name}.pdf")
+    
 
 if __name__ == "__main__":
     main()

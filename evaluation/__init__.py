@@ -1,1 +1,1 @@
-from result_analyzer import ResultAnalyzer
+from .result_analyzer import ResultAnalyzer
