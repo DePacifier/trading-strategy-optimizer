@@ -6,13 +6,14 @@ from reporting import ReportGenerator
 from trading_system_controller import TradingSystemController
 from strategies import VWAP_RSI_MACDStrategy, VWAP_RSI_ZeroLagMACDStrategy, ZeroLagMACD_OBV_Strategy, EMACrossover
 from binance.client import Client
+from utils.enums import TradeMode
 
 def main():
     # Initialize components
     api_key = "Binance API KEY"
     api_secret = "Binance API Secret"
     data_loader = DataLoader(api_key, api_secret)
-    strategy_manager = StrategyManager(None, initial_capital=100, risk_per_trade=0.10)
+    strategy_manager = StrategyManager(None, initial_capital=100, risk_per_trade=0.10, trade_mode= TradeMode.LONG_ONLY)
     ga_optimizer = GeneticAlgorithmOptimizer()
     pso_optimizer = ParticleSwarmOptimizer()
     bayesian_optimizer = BayesianOptimizer()
@@ -28,10 +29,10 @@ def main():
     controller.set_objectives(['total_return'])
     
     best_results = controller.run(
-        symbol='NEIROUSDT',
-        interval=Client.KLINE_INTERVAL_5MINUTE,
-        start_time="1 Jan, 2024",
-        end_time="8 Oct, 2024",
+        symbol='BTCUSDT',
+        interval=Client.KLINE_INTERVAL_4HOUR,
+        start_time="1 Mar, 2024",
+        end_time="6 Jun, 2025",
         strategies=[EMACrossover],
         param_ranges={
             'MACD_RSIStrategy': [
@@ -121,10 +122,10 @@ def main():
     # Generate the report with a dynamic file name
     report_generator.generate_report(
         best_results,
-        symbol='NEIROUSDT',
-        interval=Client.KLINE_INTERVAL_5MINUTE,
-        start_time="1 Jan, 2024",
-        end_time="8 Oct, 2024",
+        symbol='BTCUSDT',
+        interval=Client.KLINE_INTERVAL_4HOUR,
+        start_time="1 Mar, 2024",
+        end_time="6 Jun, 2025",
     )
     
 
