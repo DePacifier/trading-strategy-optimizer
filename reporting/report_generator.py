@@ -97,21 +97,25 @@ class ReportGenerator:
                     [convert_to_eat(trade['entry_time']), ffloat(trade['entry_price']), fpos(trade['position']), convert_to_eat(trade['exit_time']), ffloat(trade['exit_price']), ffloat(trade['profit_loss']), ffloat(trade['size']), ffloat(trade['remaining_capital'])]
                     for trade in result['trades']
                 ]
-                trade_table = Table(trade_data)
+
+                # Fit table columns to the available page width
+                col_width = doc.width / len(trade_data[0])
+                trade_table = Table(trade_data, colWidths=[col_width] * len(trade_data[0]))
+
                 trade_table.setStyle(TableStyle([
                     ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
                     ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                     ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                     ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, 0), 14),
-                    ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                    ('FONTSIZE', (0, 0), (-1, 0), 10),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
                     ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
                     ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
                     ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                    ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-                    ('FONTSIZE', (0, 0), (-1, -1), 12),
-                    ('TOPPADDING', (0, 0), (-1, -1), 6),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                    ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 1), (-1, -1), 8),
+                    ('TOPPADDING', (0, 0), (-1, -1), 4),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
                     ('GRID', (0, 0), (-1, -1), 1, colors.black)
                 ]))
                 elements.append(trade_table)
