@@ -4,8 +4,8 @@ from .optimizer import Optimizer
 
 class ParticleSwarmOptimizer(Optimizer):
     def optimize(self, objective_function, param_ranges, n_iterations, initial_guess=None):
-        lb = [low for low, _ in param_ranges]
-        ub = [high for _, high in param_ranges]
+        lb = [p['low'] for p in param_ranges]
+        ub = [p['high'] for p in param_ranges]
 
         def pso_objective(x):
             return -objective_function(x)  # PSO minimizes, so we negate
