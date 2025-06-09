@@ -1,5 +1,4 @@
 import multiprocessing as mp
-import numpy as np
 from .optimizer import Optimizer
 
 class ParallelHybridOptimizer(Optimizer):
