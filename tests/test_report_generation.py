@@ -35,3 +35,6 @@ def test_report_generation(tmp_path):
     out_file = tmp_path / 'report.pdf'
     rg.generate_report(results, filename=str(out_file))
     assert out_file.exists()
+    data_file = os.path.join(os.path.dirname(__file__), '..', 'data', 'trades.csv')
+    if os.path.exists(data_file):
+        os.remove(data_file)
