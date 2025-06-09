@@ -118,9 +118,14 @@ def main():
         n_iterations=50
     )
 
-    # Generate the report
-    file_name = "NEIROUSDT-Jan-Oct-24-5M-EMACRS"
-    report_generator.generate_report(best_results, filename=f"{file_name}.pdf")
+    # Generate the report with a dynamic file name
+    report_generator.generate_report(
+        best_results,
+        symbol='NEIROUSDT',
+        interval=Client.KLINE_INTERVAL_5MINUTE,
+        start_time="1 Jan, 2024",
+        end_time="8 Oct, 2024",
+    )
     
 
 if __name__ == "__main__":

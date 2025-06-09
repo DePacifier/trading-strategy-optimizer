@@ -11,7 +11,19 @@ class ReportGenerator:
     def __init__(self):
         self.styles = getSampleStyleSheet()
 
-    def generate_report(self, best_results, filename="reports/trading_system_report.pdf"):
+    def generate_report(self, best_results, filename=None, *, symbol=None, interval=None, start_time=None, end_time=None):
+        """Generate a PDF report.
+
+        If ``filename`` is not provided a name will be constructed from
+        ``symbol``, ``interval``, ``start_time`` and ``end_time`` and saved
+        under the ``reports`` directory.
+        """
+        if filename is None:
+            parts = [symbol, start_time, end_time, interval]
+            parts = [str(p).replace(' ', '').replace(',', '-') for p in parts if p]
+            base = "-".join(parts) if parts else "trading_system_report"
+            filename = f"reports/{base}.pdf"
+
         doc = SimpleDocTemplate(filename, pagesize=letter)
         elements = []
 

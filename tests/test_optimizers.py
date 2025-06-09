@@ -4,6 +4,9 @@ import random
 import numpy as np
 from optimization.genetic_algorithm import GeneticAlgorithmOptimizer
 from optimization.differential_evolution import DifferentialEvolutionOptimizer
+from optimization.particle_swarm import ParticleSwarmOptimizer
+from optimization.bayesian_optimization import BayesianOptimizer
+from optimization.hybrid_optimizer import ParallelHybridOptimizer
 
 # Simple quadratic objective with maximum at x=3
 param_ranges = [{'low': 0, 'high': 5, 'type': 'float'}]
@@ -24,3 +27,28 @@ def test_differential_evolution_optimizer():
     de = DifferentialEvolutionOptimizer()
     result = de.optimize(lambda p: (p[0] - 3) ** 2, param_ranges, n_iterations=5)
     assert abs(result[0] - 3) < 1
+
+
+def test_particle_swarm_optimizer():
+    np.random.seed(0)
+    pso = ParticleSwarmOptimizer()
+    result = pso.optimize(quadratic_objective, param_ranges, n_iterations=5)
+    assert abs(result[0] - 3) < 1
+
+
+def test_bayesian_optimizer():
+    np.random.seed(0)
+    bo = BayesianOptimizer()
+    result = bo.optimize(quadratic_objective, param_ranges, n_iterations=5)
+    assert abs(result[0] - 3) < 1
+
+
+def test_parallel_hybrid_optimizer():
+    np.random.seed(0)
+    ga = GeneticAlgorithmOptimizer()
+    pso = ParticleSwarmOptimizer()
+    bo = BayesianOptimizer()
+    de = DifferentialEvolutionOptimizer()
+    pho = ParallelHybridOptimizer(ga, pso, bo, de, n_processes=2)
+    result = pho.optimize(quadratic_objective, param_ranges, n_iterations=8)
+    assert abs(result[0] - 3) < 1.5

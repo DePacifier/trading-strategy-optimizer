@@ -13,9 +13,31 @@ class TradingSystemController:
         self.test_data = None
         self.current_strategy_class = None
         self.objectives = ['sharpe_ratio']
+        self.objective_weights = {'sharpe_ratio': 1.0}
     
     def set_objectives(self, objectives):
-        self.objectives = objectives
+        """Set optimization objectives with optional weighting.
+
+        Parameters
+        ----------
+        objectives : list or dict
+            If a list is provided, each objective is given equal weight.
+            If a dict is provided, keys are objective names and values are
+            weights (e.g. percentages) indicating their relative importance.
+        """
+        if isinstance(objectives, dict):
+            self.objectives = list(objectives.keys())
+            total = float(sum(objectives.values())) or 1.0
+            self.objective_weights = {
+                obj: weight / total for obj, weight in objectives.items()
+            }
+        else:
+            self.objectives = list(objectives)
+            if self.objectives:
+                eq_weight = 1.0 / len(self.objectives)
+            else:
+                eq_weight = 1.0
+            self.objective_weights = {obj: eq_weight for obj in self.objectives}
 
     def objective_function(self, params):
         strategy = self.current_strategy_class(*params)
@@ -23,22 +45,14 @@ class TradingSystemController:
         self.strategy_manager.execute_strategy(strategy)
         performance = self.result_analyzer.analyze(self.strategy_manager.trades)
         
-        if len(self.objectives) == 1:
-            return performance[self.objectives[0]]
-        
-        else:
-            return [-performance[obj] for obj in self.objectives]
-        
-        # Future Normalization
-        # Normalize each objective metric
-        normalized_performance = {
-            'total_return': performance['total_return'] / 100000,  # Example normalization
-            'sharpe_ratio': performance['sharpe_ratio'] / 2,      # Sharpe ratio normalization
-            'max_drawdown': performance['max_drawdown'] / 0.5,    # Max drawdown normalization
-            # Add normalizations for other objectives
-        }
-        
-        return [-normalized_performance[obj] for obj in self.objectives]
+        score = 0.0
+        for obj in self.objectives:
+            value = performance.get(obj, 0)
+            if obj == 'max_drawdown':
+                value = -value  # smaller drawdown is better
+            score += self.objective_weights.get(obj, 0) * value
+
+        return score
 
     def run(self, symbol, interval, start_time, end_time, strategies, param_ranges, n_iterations, train_ratio=0.7):
         logging.info("Starting trading system optimization")
