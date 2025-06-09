@@ -1,10 +1,16 @@
 # Binance API credentials
-BINANCE_API_KEY = 'your_binance_api_key'
-BINANCE_API_SECRET = 'your_binance_api_secret'
+import os
+
+# Allow API credentials to be configured via environment variables.  This makes
+# it easier to run the optimizer in different environments without modifying
+# the source code.
+BINANCE_API_KEY = os.getenv('BINANCE_API_KEY', 'your_binance_api_key')
+BINANCE_API_SECRET = os.getenv('BINANCE_API_SECRET', 'your_binance_api_secret')
 
 # Telegram Bot credentials
-TELEGRAM_BOT_TOKEN = "TELEGRAM_BOT_TOKEN"
-TELEGRAM_CHAT_IDs = ["TELEGRAM_CHAT_ID_1", "TELEGRAM_CHAT_ID_2"]
+TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', 'TELEGRAM_BOT_TOKEN')
+chat_ids = os.getenv('TELEGRAM_CHAT_IDS', 'TELEGRAM_CHAT_ID_1,TELEGRAM_CHAT_ID_2')
+TELEGRAM_CHAT_IDs = [cid.strip() for cid in chat_ids.split(',') if cid.strip()]
 
 # Trading parameters
 SYMBOL = 'BTCUSDT'
@@ -27,3 +33,4 @@ STRATEGY_PARAMS = {
 # Risk management parameters
 AVAILABLE_CAPITAL = 100  # Total capital in USD
 RISK_PER_TRADE = 0.10  # Risk per trade as a fraction of capital (e.g., 0.01 for 1%)
+
