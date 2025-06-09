@@ -30,7 +30,7 @@ class ParallelHybridOptimizer(Optimizer):
             pso_best = self._best(pso_results, objective_function)
 
             # ---- Differential Evolution ----
-            de_args = (objective_function, param_ranges, phase_iters)
+            de_args = (objective_function, param_ranges, phase_iters, pso_best)
             de_results = pool.starmap(self.de_optimizer.optimize, [de_args] * self.n_processes)
             de_best = self._best(de_results, objective_function)
 
@@ -40,4 +40,8 @@ class ParallelHybridOptimizer(Optimizer):
             bayes_results = pool.starmap(self.bayesian_optimizer.optimize, [bayes_args] * self.n_processes)
             final_best = self._best(bayes_results, objective_function)
 
-        return final_best
+        # Select the overall best result from each phase
+        all_best = [ga_best, pso_best, de_best, final_best]
+        scored = [(objective_function(r), r) for r in all_best]
+        scored.sort(key=lambda x: x[0], reverse=True)
+        return scored[0][1]
