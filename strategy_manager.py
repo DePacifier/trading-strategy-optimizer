@@ -1,4 +1,4 @@
-from utils.enums import Position, TradeAction
+from utils.enums import Position, TradeAction, TradeMode
 
 class Trade:
     def __init__(self, entry_time, entry_price, position, stop_loss, take_profit, size):
@@ -33,19 +33,23 @@ class Trade:
         }
 
 class StrategyManager:
-    def __init__(self, data, initial_capital=100000, risk_per_trade=0.02):
+    def __init__(self, data, initial_capital=100000, risk_per_trade=0.02,
+                 trade_mode=TradeMode.BOTH):
         self.data = data
         self.current_position = Position.NEUTRAL
         self.trades = []
         self.initial_capital = initial_capital
         self.available_capital = initial_capital
         self.risk_per_trade = risk_per_trade
+        self.trade_mode = trade_mode
 
-    def reset(self, data):
+    def reset(self, data, trade_mode=None):
         self.data = data
         self.current_position = Position.NEUTRAL
         self.trades = []
         self.available_capital = self.initial_capital
+        if trade_mode is not None:
+            self.trade_mode = trade_mode
 
     def execute_strategy(self, strategy):
         signals = strategy.generate_signals(self.data)
@@ -66,9 +70,11 @@ class StrategyManager:
 
             # Process signal
             if signal == TradeAction.ENTER_LONG and self.current_position != Position.LONG:
-                self.enter_trade(timestamp, Position.LONG, strategy.stop_loss_pct, strategy.take_profit_pct)
+                if self.trade_mode in (TradeMode.BOTH, TradeMode.LONG_ONLY):
+                    self.enter_trade(timestamp, Position.LONG, strategy.stop_loss_pct, strategy.take_profit_pct)
             elif signal == TradeAction.ENTER_SHORT and self.current_position != Position.SHORT:
-                self.enter_trade(timestamp, Position.SHORT, strategy.stop_loss_pct, strategy.take_profit_pct)
+                if self.trade_mode in (TradeMode.BOTH, TradeMode.SHORT_ONLY):
+                    self.enter_trade(timestamp, Position.SHORT, strategy.stop_loss_pct, strategy.take_profit_pct)
             elif signal == TradeAction.EXIT and self.current_position != Position.NEUTRAL:
                 self.exit_trade(timestamp)
 

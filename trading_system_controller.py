@@ -9,6 +9,8 @@ class TradingSystemController:
         self.optimizer = optimizer
         self.result_analyzer = result_analyzer
         self.data = None
+        self.train_data = None
+        self.test_data = None
         self.current_strategy_class = None
         self.objectives = ['sharpe_ratio']
     
@@ -17,7 +19,7 @@ class TradingSystemController:
 
     def objective_function(self, params):
         strategy = self.current_strategy_class(*params)
-        self.strategy_manager.reset(self.data)
+        self.strategy_manager.reset(self.train_data)
         self.strategy_manager.execute_strategy(strategy)
         performance = self.result_analyzer.analyze(self.strategy_manager.trades)
         
@@ -38,12 +40,15 @@ class TradingSystemController:
         
         return [-normalized_performance[obj] for obj in self.objectives]
 
-    def run(self, symbol, interval, start_time, end_time, strategies, param_ranges, n_iterations):
+    def run(self, symbol, interval, start_time, end_time, strategies, param_ranges, n_iterations, train_ratio=0.7):
         logging.info("Starting trading system optimization")
 
         # Load data
         logging.info(f"Loading historical data for {symbol}")
         self.data = self.data_loader.fetch_historical_data(symbol, interval, start_time, end_time)
+        split_idx = int(len(self.data) * train_ratio)
+        self.train_data = self.data.iloc[:split_idx]
+        self.test_data = self.data.iloc[split_idx:]
 
         best_results = {}
         for strategy_class in strategies:
@@ -61,15 +66,22 @@ class TradingSystemController:
             
             best_strategy = strategy_class(*best_params)
 
-            self.strategy_manager.reset(self.data)
+            # Evaluate on training data
+            self.strategy_manager.reset(self.train_data)
             self.strategy_manager.execute_strategy(best_strategy)
+            train_performance = self.result_analyzer.analyze(self.strategy_manager.trades)
 
-            performance = self.result_analyzer.analyze(self.strategy_manager.trades)
+            # Evaluate on test data
+            self.strategy_manager.reset(self.test_data)
+            self.strategy_manager.execute_strategy(best_strategy)
+            test_performance = self.result_analyzer.analyze(self.strategy_manager.trades)
+
             best_params = {param["name"]:best_param for param, best_param in zip(param_ranges[strategy_class.__name__], best_params)}
             trades = [trade.get_data() for trade in self.strategy_manager.trades]
             best_results[strategy_class.__name__] = {
                 'params': best_params,
-                'performance': performance,
+                'train_performance': train_performance,
+                'test_performance': test_performance,
                 'trades': trades
             }
 
