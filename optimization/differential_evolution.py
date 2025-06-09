@@ -9,8 +9,10 @@ class DifferentialEvolutionOptimizer(Optimizer):
             params = [int(val) if param['type'] == 'int' else val for val, param in zip(x, param_ranges)]
             return objective_function(params)
 
-        result = differential_evolution(
-            wrapper, bounds, maxiter=n_iterations, init=initial_guess, strategy='best1bin'
-        )
+        kwargs = {'maxiter': n_iterations, 'strategy': 'best1bin'}
+        if initial_guess is not None:
+            kwargs['init'] = initial_guess
+
+        result = differential_evolution(wrapper, bounds, **kwargs)
 
         return [int(val) if param['type'] == 'int' else val for val, param in zip(result.x, param_ranges)]
