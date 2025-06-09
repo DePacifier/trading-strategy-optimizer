@@ -174,6 +174,32 @@ class StrategyManager:
         current_trade.remaining_capital = self.available_capital
         
         self.current_position = Position.NEUTRAL
+
+    def check_exit_prices(self, timestamp, high_price, low_price):
+        """Check stop-loss/take-profit based on intraperiod prices."""
+        if self.current_position == Position.NEUTRAL:
+            return
+
+        current_trade = self.trades[-1]
+        exit_price = None
+
+        if self.current_position == Position.LONG:
+            if low_price <= current_trade.stop_loss:
+                exit_price = current_trade.stop_loss
+            elif high_price >= current_trade.take_profit:
+                exit_price = current_trade.take_profit
+        elif self.current_position == Position.SHORT:
+            if high_price >= current_trade.stop_loss:
+                exit_price = current_trade.stop_loss
+            elif low_price <= current_trade.take_profit:
+                exit_price = current_trade.take_profit
+
+        if exit_price is not None:
+            current_trade.exit_time = timestamp
+            current_trade.exit_price = exit_price
+            self.available_capital += current_trade.profit_loss
+            current_trade.remaining_capital = self.available_capital
+            self.current_position = Position.NEUTRAL
         
     def risk_based_position_sizing(self, entry_price, stop_loss_price):
         risk_amount = self.available_capital * self.risk_per_trade

@@ -20,9 +20,7 @@ async def websocket_candle_feed(url):
             # Binance kline format
             if isinstance(data, dict) and 'data' in data and 'k' in data['data']:
                 kline = data['data']['k']
-                if not kline.get('x'):
-                    # ignore partial candles
-                    continue
+                closed = bool(kline.get('x'))
                 timestamp = pd.to_datetime(kline['T'], unit='ms')
                 df = pd.DataFrame({
                     'open': [float(kline['o'])],
@@ -32,6 +30,7 @@ async def websocket_candle_feed(url):
                     'volume': [float(kline['v'])]
                 }, index=[timestamp])
             else:
+                closed = True
                 timestamp = pd.to_datetime(data['timestamp'])
                 df = pd.DataFrame({
                     'open': [data['open']],
@@ -41,4 +40,4 @@ async def websocket_candle_feed(url):
                     'volume': [data['volume']]
                 }, index=[timestamp])
 
-            yield df
+            yield df, closed

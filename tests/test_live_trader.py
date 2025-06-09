@@ -38,7 +38,7 @@ def make_data():
 
 async def data_stream(df):
     for i in range(len(df)):
-        yield df.iloc[i:i+1]
+        yield df.iloc[i:i+1], True
         await asyncio.sleep(0)
 
 def test_live_trader_matches_offline():
@@ -137,13 +137,14 @@ def test_websocket_feed_binance_format():
         port = 8899
         server = await binance_server(data, port)
         feed = websocket_candle_feed(f"ws://localhost:{port}")
-        candle = await anext(feed)
+        candle, closed = await anext(feed)
         server.close()
         await server.wait_closed()
-        return candle
+        return candle, closed
 
-    candle = asyncio.run(run_case())
-    pd.testing.assert_frame_equal(candle, data)
+    candle, closed = asyncio.run(run_case())
+    assert closed is True
+    pd.testing.assert_frame_equal(candle, data.astype(float))
 
 
 def test_trade_recorder():
@@ -163,3 +164,30 @@ def test_trade_recorder():
 
     count = asyncio.run(run_case())
     assert count == 1
+
+
+def test_partial_candle_exit():
+    data = make_data()
+    first = data.iloc[:1]
+    partial = pd.DataFrame({
+        'open': [110], 'high': [112], 'low': [89], 'close': [105], 'volume': [1000]
+    }, index=[data.index[1]])
+    final = data.iloc[1:2]
+
+    async def feed():
+        yield first, True
+        yield partial, False
+        yield final, True
+
+    sm = StrategyManager(pd.DataFrame(columns=data.columns), initial_capital=100, risk_per_trade=0.1)
+    trader = LiveTrader(feed(), sm, DummyStrategy(), sleep_time=0)
+
+    async def run_case():
+        await trader.step()  # entry candle
+        await trader.step()  # partial triggers exit
+        return sm.trades[0]
+
+    trade = asyncio.run(run_case())
+    assert trade.exit_price == 90
+    assert trade.exit_time == data.index[1]
+
