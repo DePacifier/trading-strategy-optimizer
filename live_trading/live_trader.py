@@ -10,7 +10,7 @@ class LiveTrader:
     connected directly to a websocket feed.
     """
 
-    def __init__(self, data_feed, strategy_manager, strategy, sleep_time=1.0):
+    def __init__(self, data_feed, strategy_manager, strategy, sleep_time=1.0, initial_data=None):
         """Initialize the trader.
 
         Parameters
@@ -33,7 +33,14 @@ class LiveTrader:
         self.strategy_manager = strategy_manager
         self.strategy = strategy
         self.sleep_time = sleep_time
-        self.data = pd.DataFrame(columns=['open', 'high', 'low', 'close', 'volume'])
+
+        if initial_data is None:
+            self.data = pd.DataFrame(columns=['open', 'high', 'low', 'close', 'volume'])
+        else:
+            self.data = initial_data.copy()
+            # Expose historical candles to the strategy manager so that
+            # position sizing and exits can reference the same dataset.
+            self.strategy_manager.data = self.data
 
     async def step(self):
         """Process the next candle from the feed.

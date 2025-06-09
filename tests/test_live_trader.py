@@ -12,6 +12,22 @@ from live_trading.live_trader import LiveTrader
 from live_trading.websocket_feed import websocket_candle_feed
 from live_trading.trade_recorder import TradeRecorder
 
+
+class HistoryDependentStrategy:
+    """Strategy that only starts generating signals once three candles are present."""
+
+    def __init__(self):
+        self.stop_loss_pct = 0.1
+        self.take_profit_pct = 0.2
+
+    def generate_signals(self, data):
+        signals = pd.Series(TradeAction.EXIT.value, index=data.index)
+        if len(data) >= 3:
+            signals.iloc[2] = TradeAction.ENTER_LONG.value
+        if len(data) >= 4:
+            signals.iloc[3] = TradeAction.EXIT.value
+        return signals
+
 class DummyStrategy:
     def __init__(self):
         self.stop_loss_pct = 0.1
@@ -33,6 +49,17 @@ def make_data():
         'low':[95,108],
         'close':[100,110],
         'volume':[1000,1000]
+    }, index=index)
+
+
+def make_long_data():
+    index = [datetime(2024, 1, 1), datetime(2024, 1, 2), datetime(2024, 1, 3), datetime(2024, 1, 4)]
+    return pd.DataFrame({
+        'open': [100, 105, 110, 115],
+        'high': [105, 110, 115, 120],
+        'low': [95, 100, 105, 110],
+        'close': [100, 108, 112, 118],
+        'volume': [1000, 1000, 1000, 1000]
     }, index=index)
 
 
@@ -190,4 +217,27 @@ def test_partial_candle_exit():
     trade = asyncio.run(run_case())
     assert trade.exit_price == 90
     assert trade.exit_time == data.index[1]
+
+
+def test_live_trader_with_initial_data():
+    data = make_long_data()
+    history = data.iloc[:2]
+    live = data.iloc[2:]
+
+    # Offline run on full data
+    offline_sm = StrategyManager(data, initial_capital=100, risk_per_trade=0.1)
+    offline_sm.execute_strategy(HistoryDependentStrategy())
+    expected = [(t.entry_time, t.exit_time) for t in offline_sm.trades]
+
+    async def feed():
+        for i in range(len(live)):
+            yield live.iloc[i:i+1], True
+            await asyncio.sleep(0)
+
+    sm = StrategyManager(history.copy(), initial_capital=100, risk_per_trade=0.1)
+    trader = LiveTrader(feed(), sm, HistoryDependentStrategy(), sleep_time=0, initial_data=history)
+    asyncio.run(trader.run())
+
+    result = [(t.entry_time, t.exit_time) for t in sm.trades]
+    assert result == expected
 
