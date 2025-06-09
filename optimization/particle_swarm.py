@@ -8,14 +8,13 @@ class ParticleSwarmOptimizer(Optimizer):
         ub = [p['high'] for p in param_ranges]
 
         def pso_objective(x):
-            return -objective_function(x)  # PSO minimizes, so we negate
+            return -objective_function(
+                [int(val) if param['type'] == 'int' else val for val, param in zip(x, param_ranges)]
+            )  # PSO minimizes, so negate
 
-        # Pre-process the initial population by setting one particle to the GA best result
-        if initial_guess is not None:
-            xopt, _ = pso(pso_objective, lb, ub, swarmsize=10, maxiter=n_iterations, debug=False)
-            xopt = np.asarray(initial_guess)
-        else:
-            xopt, _ = pso(pso_objective, lb, ub, swarmsize=10, maxiter=n_iterations, debug=False)
-            
+        # NOTE: pyswarm's `pso` does not support setting an initial population.
+        #       For now we simply ignore `initial_guess` if provided.
+        xopt, _ = pso(pso_objective, lb, ub, swarmsize=10, maxiter=n_iterations, debug=False)
+
         print("XOPT result\n", xopt)
-        return xopt
+        return [int(val) if param['type'] == 'int' else val for val, param in zip(xopt, param_ranges)]
