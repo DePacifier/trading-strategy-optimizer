@@ -28,7 +28,17 @@ class GeneticAlgorithmOptimizer(Optimizer):
 
         toolbox.register("evaluate", evaluate)
         toolbox.register("mate", tools.cxBlend, alpha=0.5)
-        toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=1, indpb=0.2)
+        def mutate_and_bound(individual):
+            tools.mutGaussian(individual, mu=0, sigma=1, indpb=0.2)
+            for i, param in enumerate(param_ranges):
+                low, high = param['low'], param['high']
+                if param['type'] == 'int':
+                    individual[i] = int(round(min(max(individual[i], low), high)))
+                else:
+                    individual[i] = min(max(individual[i], low), high)
+            return (individual,)
+
+        toolbox.register("mutate", mutate_and_bound)
         toolbox.register("select", tools.selTournament, tournsize=3)
 
         population = toolbox.population(n=50)
