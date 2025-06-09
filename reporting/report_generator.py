@@ -1,3 +1,5 @@
+from pandas import DataFrame
+
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
@@ -87,7 +89,7 @@ class ReportGenerator:
             ]))
             elements.append(trade_table)
             try:
-                result["trades"].to_csv("./data/trades.csv", index=False)
+                DataFrame(result["trades"]).to_csv("./data/trades.csv", index=False)
             except Exception:
                 print("Failed to save trades")
 

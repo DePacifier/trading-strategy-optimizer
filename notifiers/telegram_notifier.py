@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import List
 import telegram
 import asyncio
 
@@ -31,10 +32,10 @@ class MessageContext:
         bot = telegram.Bot(self._bot_token)
         await self._strategy.send_message(bot, chat_id)
 
-async def send_notifications_to_multiple_chats(strategy, bot_token, chat_ids):
+async def send_notifications_to_multiple_chats(strategy: MessageStrategy, bot_token: str, chat_ids: List[int]):
     tasks = [MessageContext(strategy, bot_token).execute_send(chat_id) for chat_id in chat_ids]
     await asyncio.gather(*tasks)
 
 # Synchronous function to trigger async calls
-def send_notifications(strategy, bot_token, chat_ids):
+def send_notifications(strategy: MessageStrategy, bot_token: str, chat_ids: List[int]):
     asyncio.run(send_notifications_to_multiple_chats(strategy, bot_token, chat_ids))
