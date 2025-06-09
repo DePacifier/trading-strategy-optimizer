@@ -32,8 +32,14 @@ class BayesianOptimizer(Optimizer):
         if initial_point is not None:
             initial_point = list(initial_point)
 
-        result = gp_minimize(wrapper, space, n_calls=n_iterations, x0=initial_point,
-                             noise=1e-10, n_random_starts=5, 
-                             acq_func='EI')  # Expected Improvement
+        result = gp_minimize(
+            wrapper,
+            space,
+            n_calls=n_iterations,
+            x0=initial_point,
+            noise=1e-10,
+            n_initial_points=5,
+            acq_func='EI',  # Expected Improvement
+        )
         
         return [int(val) if param['type'] == 'int' else val for val, param in zip(result.x, param_ranges)]
