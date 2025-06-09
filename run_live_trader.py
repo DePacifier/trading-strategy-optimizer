@@ -8,8 +8,8 @@ from live_trading import LiveTrader, websocket_candle_feed, TradeRecorder
 
 def build_trader(url: str) -> tuple[LiveTrader, TradeRecorder]:
     feed = websocket_candle_feed(url)
-    strategy = EMACrossover(short_window=9, long_window=21,
-                            stop_loss_pct=0.02, take_profit_pct=0.04)
+    strategy = EMACrossover(short_window=3, long_window=21,
+                            stop_loss_pct=6, take_profit_pct=3)
     manager = StrategyManager(pd.DataFrame(columns=['open', 'high', 'low', 'close', 'volume']),
                               initial_capital=1000, risk_per_trade=0.01)
     trader = LiveTrader(feed, manager, strategy)

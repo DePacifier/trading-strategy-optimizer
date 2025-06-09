@@ -42,7 +42,7 @@ class LiveTrader:
         ``(df, closed)`` pairs where ``df`` is a single-row ``DataFrame``.
         """
         try:
-            new_candle, closed = await anext(self.data_feed)
+            new_candle, closed = await self.data_feed.__anext__()
         except StopAsyncIteration:
             return False
 
