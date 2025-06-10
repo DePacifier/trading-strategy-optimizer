@@ -72,11 +72,11 @@ def main():
 
         # Calculate stop loss and take profit prices
         if current_signal == TradeAction.ENTER_LONG.value:
-            stop_loss_price = entry_price * (1 - STRATEGY_PARAMS['stop_loss_pct'])
-            take_profit_price = entry_price * (1 + STRATEGY_PARAMS['take_profit_pct'])
+            stop_loss_price = entry_price * (1 - STRATEGY_PARAMS['stop_loss_pct'] / 100)
+            take_profit_price = entry_price * (1 + STRATEGY_PARAMS['take_profit_pct'] / 100)
         elif current_signal == TradeAction.ENTER_SHORT.value:
-            stop_loss_price = entry_price * (1 + STRATEGY_PARAMS['stop_loss_pct'])
-            take_profit_price = entry_price * (1 - STRATEGY_PARAMS['take_profit_pct'])
+            stop_loss_price = entry_price * (1 + STRATEGY_PARAMS['stop_loss_pct'] / 100)
+            take_profit_price = entry_price * (1 - STRATEGY_PARAMS['take_profit_pct'] / 100)
 
         # Calculate position size
         position_size = risk_based_position_sizing(
@@ -110,7 +110,6 @@ def main():
     else:
         print("No new entry signal.")
         print(len(signals))
-
 
 if __name__ == "__main__":
     main()
