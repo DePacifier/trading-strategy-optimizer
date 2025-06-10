@@ -10,12 +10,26 @@ class RSIStrategy(Strategy):
         self.overbought = overbought
 
     def generate_signals(self, data):
-        signals = pd.Series(index=data.index)
+        signals = pd.Series(index=data.index, dtype=int)
         signals[:] = TradeAction.EXIT.value
 
         rsi = ta.momentum.RSIIndicator(data['close'], window=self.rsi_period).rsi()
-        
-        signals[rsi < self.oversold] = TradeAction.ENTER_LONG.value
-        signals[rsi > self.overbought] = TradeAction.ENTER_SHORT.value
+
+        position = TradeAction.EXIT.value
+        for i in range(1, len(data)):
+            long_entry = rsi.iloc[i] < self.oversold
+            short_entry = rsi.iloc[i] > self.overbought
+            long_exit = position == TradeAction.ENTER_LONG.value and rsi.iloc[i] > self.overbought
+            short_exit = position == TradeAction.ENTER_SHORT.value and rsi.iloc[i] < self.oversold
+
+            if position == TradeAction.EXIT.value:
+                if long_entry:
+                    position = TradeAction.ENTER_LONG.value
+                elif short_entry:
+                    position = TradeAction.ENTER_SHORT.value
+            elif long_exit or short_exit:
+                position = TradeAction.EXIT.value
+
+            signals.iloc[i] = position
 
         return signals

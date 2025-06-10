@@ -18,6 +18,8 @@ spec.loader.exec_module(mac_module)
 MovingAverageCrossover = mac_module.MovingAverageCrossover
 from strategies.macd_rsi import MACD_RSIStrategy
 from strategies.macd_rsi_cmf import MACD_RSI_CMF_Strategy
+from strategies.bollinger_bands_strategy import BollingerBandsStrategy
+from strategies.rsi_strategy import RSIStrategy
 
 def test_moving_average_crossover_signals():
     dates = pd.date_range('2024-01-01', periods=5)
@@ -149,3 +151,39 @@ def test_vwap_window_influences_signals():
 
     assert list(signals_short) == expected_short
     assert list(signals_long) == expected_long
+
+
+def test_bollinger_bands_position_persistence():
+    dates = pd.date_range('2024-01-01', periods=5)
+    close = [1, 0, 0, 0, 0.1]
+    data = pd.DataFrame({
+        'close': close,
+        'open': close,
+        'high': close,
+        'low': close,
+        'volume': [1] * 5,
+    }, index=dates)
+
+    strat = BollingerBandsStrategy(window=2, num_std=0.5)
+    signals = strat.generate_signals(data)
+    expected = [TradeAction.EXIT.value, TradeAction.ENTER_LONG.value,
+                TradeAction.ENTER_LONG.value, TradeAction.ENTER_LONG.value,
+                TradeAction.EXIT.value]
+    assert list(signals) == expected
+
+
+def test_rsi_position_persistence():
+    dates = pd.date_range('2024-01-01', periods=5)
+    close = [10, 20, 30, 80, 90]
+    data = pd.DataFrame({
+        'close': close,
+        'open': close,
+        'high': close,
+        'low': close,
+        'volume': [1] * 5,
+    }, index=dates)
+
+    strat = RSIStrategy(rsi_period=2, oversold=30, overbought=70)
+    signals = strat.generate_signals(data)
+    expected = [TradeAction.EXIT.value] + [TradeAction.ENTER_SHORT.value] * 4
+    assert list(signals) == expected
