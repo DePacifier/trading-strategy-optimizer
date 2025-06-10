@@ -9,7 +9,7 @@ class MovingAverageCrossover(Strategy):
         self.long_window = max(1, int(long_window))
 
     def generate_signals(self, data):
-        signals = pd.Series(index=data.index)
+        signals = pd.Series(index=data.index, dtype=int)
         signals[:] = TradeAction.EXIT.value
 
         short_ma = data['close'].rolling(window=self.short_window).mean()

@@ -13,7 +13,7 @@ class MACD_RSIStrategy(Strategy):
         self.rsi_oversold = float(rsi_oversold)
 
     def generate_signals(self, data):
-        signals = pd.Series(index=data.index)
+        signals = pd.Series(index=data.index, dtype=int)
         signals[:] = TradeAction.EXIT.value
 
         # MACD calculation

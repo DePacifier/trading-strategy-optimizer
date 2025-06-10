@@ -14,7 +14,7 @@ class MACD_RSI_CMF_Strategy(Strategy):
         self.cmf_window = max(1, int(cmf_window))
 
     def generate_signals(self, data):
-        signals = pd.Series(index=data.index)
+        signals = pd.Series(index=data.index, dtype=int)
         signals[:] = TradeAction.EXIT.value
 
         # MACD calculation
