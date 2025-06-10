@@ -21,12 +21,14 @@ def test_genetic_algorithm_optimizer():
     ga = GeneticAlgorithmOptimizer()
     result = ga.optimize(quadratic_objective, param_ranges, n_iterations=5)
     assert abs(result[0] - 3) < 1
+    assert param_ranges[0]['low'] <= result[0] <= param_ranges[0]['high']
 
 def test_differential_evolution_optimizer():
     np.random.seed(0)
     de = DifferentialEvolutionOptimizer()
     result = de.optimize(lambda p: (p[0] - 3) ** 2, param_ranges, n_iterations=5)
     assert abs(result[0] - 3) < 1
+    assert param_ranges[0]['low'] <= result[0] <= param_ranges[0]['high']
 
 
 def test_particle_swarm_optimizer():
@@ -34,6 +36,7 @@ def test_particle_swarm_optimizer():
     pso = ParticleSwarmOptimizer()
     result = pso.optimize(quadratic_objective, param_ranges, n_iterations=5)
     assert abs(result[0] - 3) < 1
+    assert param_ranges[0]['low'] <= result[0] <= param_ranges[0]['high']
 
 
 def test_bayesian_optimizer():
@@ -41,6 +44,7 @@ def test_bayesian_optimizer():
     bo = BayesianOptimizer()
     result = bo.optimize(quadratic_objective, param_ranges, n_iterations=5)
     assert abs(result[0] - 3) < 1
+    assert param_ranges[0]['low'] <= result[0] <= param_ranges[0]['high']
 
 
 def test_parallel_hybrid_optimizer():
@@ -52,3 +56,4 @@ def test_parallel_hybrid_optimizer():
     pho = ParallelHybridOptimizer(ga, pso, bo, de, n_processes=2)
     result = pho.optimize(quadratic_objective, param_ranges, n_iterations=8)
     assert abs(result[0] - 3) < 1.5
+    assert param_ranges[0]['low'] <= result[0] <= param_ranges[0]['high']

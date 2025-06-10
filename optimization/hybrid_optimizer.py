@@ -1,6 +1,20 @@
 import multiprocessing as mp
 from .optimizer import Optimizer
 
+
+def clamp_params(params, param_ranges):
+    """Clamp parameter values to their declared ranges and cast types."""
+    clamped = []
+    for val, spec in zip(params, param_ranges):
+        low, high = spec['low'], spec['high']
+        if spec['type'] == 'int':
+            val = int(round(val))
+        else:
+            val = float(val)
+        val = min(max(val, low), high)
+        clamped.append(val)
+    return clamped
+
 class ParallelHybridOptimizer(Optimizer):
     def __init__(self, ga_optimizer, pso_optimizer, bayesian_optimizer, differential_optimizer, n_processes=None):
         self.ga_optimizer = ga_optimizer
@@ -9,9 +23,12 @@ class ParallelHybridOptimizer(Optimizer):
         self.de_optimizer = differential_optimizer
         self.n_processes = n_processes or mp.cpu_count()
 
-    def _best(self, results, objective_function):
+    def _best(self, results, objective_function, param_ranges):
         """Return the best parameter set based on the objective function."""
-        scored = [(objective_function(r), r) for r in results]
+        scored = []
+        for r in results:
+            clamped = clamp_params(r, param_ranges)
+            scored.append((objective_function(clamped), clamped))
         scored.sort(key=lambda x: x[0], reverse=True)
         return scored[0][1]
 
@@ -22,26 +39,26 @@ class ParallelHybridOptimizer(Optimizer):
             # ---- Genetic Algorithm ----
             ga_args = (objective_function, param_ranges, phase_iters)
             ga_results = pool.starmap(self.ga_optimizer.optimize, [ga_args] * self.n_processes)
-            ga_best = self._best(ga_results, objective_function)
+            ga_best = self._best(ga_results, objective_function, param_ranges)
 
             # ---- Particle Swarm ----
             pso_args = (objective_function, param_ranges, phase_iters, ga_best)
             pso_results = pool.starmap(self.pso_optimizer.optimize, [pso_args] * self.n_processes)
-            pso_best = self._best(pso_results, objective_function)
+            pso_best = self._best(pso_results, objective_function, param_ranges)
 
             # ---- Differential Evolution ----
             de_args = (objective_function, param_ranges, phase_iters, pso_best)
             de_results = pool.starmap(self.de_optimizer.optimize, [de_args] * self.n_processes)
-            de_best = self._best(de_results, objective_function)
+            de_best = self._best(de_results, objective_function, param_ranges)
 
             # ---- Bayesian Optimization ----
             bayes_iters = max(6, phase_iters)
             bayes_args = (objective_function, param_ranges, bayes_iters, de_best)
             bayes_results = pool.starmap(self.bayesian_optimizer.optimize, [bayes_args] * self.n_processes)
-            final_best = self._best(bayes_results, objective_function)
+            final_best = self._best(bayes_results, objective_function, param_ranges)
 
         # Select the overall best result from each phase
         all_best = [ga_best, pso_best, de_best, final_best]
-        scored = [(objective_function(r), r) for r in all_best]
+        scored = [(objective_function(clamp_params(r, param_ranges)), clamp_params(r, param_ranges)) for r in all_best]
         scored.sort(key=lambda x: x[0], reverse=True)
         return scored[0][1]
