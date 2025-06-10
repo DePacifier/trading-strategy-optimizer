@@ -108,6 +108,11 @@ class MyStrategy(Strategy):
         return signals
 ```
 
+Signals should represent the desired position **at each time step**. If a trade
+remains open, emit the current position (``TradeAction.ENTER_LONG`` or
+``TradeAction.ENTER_SHORT``) for subsequent bars until an exit condition occurs.
+Only output ``TradeAction.EXIT`` when you explicitly want to close the position.
+
 Once added you can optimise it like the provided examples.
 
 ## Additional tools

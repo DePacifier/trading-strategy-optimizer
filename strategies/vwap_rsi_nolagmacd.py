@@ -34,14 +34,16 @@ class VWAP_RSI_ZeroLagMACDStrategy(Strategy):
         return zlema
 
     def generate_signals(self, data, live: bool = False):
-        signals = pd.Series(index=data.index)
+        signals = pd.Series(index=data.index, dtype=int)
         signals[:] = TradeAction.EXIT.value
 
-        # VWAP calculation
+        # VWAP calculation using a rolling window
         typical_price = (data['high'] + data['low'] + data['close']) / 3
-        cumulative_tp_vol = (typical_price * data['volume']).cumsum()
-        cumulative_vol = data['volume'].cumsum()
-        vwap = cumulative_tp_vol / cumulative_vol
+        tp_vol = typical_price * data['volume']
+        vwap = (
+            tp_vol.rolling(window=self.vwap_window, min_periods=1).sum() /
+            data['volume'].rolling(window=self.vwap_window, min_periods=1).sum()
+        )
 
         # RSI calculation
         delta = data['close'].diff()
@@ -63,35 +65,48 @@ class VWAP_RSI_ZeroLagMACDStrategy(Strategy):
         signal_line = 2 * emasig1 - emasig2
 
         # Generating signals
-        # position = None
-        check_from = (len(data) - 2) if live else 0
-            
-        for i in range(1 + check_from, len(data)):
-            print("Calculating for: ", i)
-            # Long Entry Condition
-            if (
-                data['close'].iloc[i] > vwap.iloc[i] and
-                rsi.iloc[i] < self.rsi_oversold and  # Oversold condition for long entry
-                zero_lag_macd.iloc[i] > signal_line.iloc[i] and
-                zero_lag_macd.iloc[i - 1] <= signal_line.iloc[i - 1]  # MACD crosses above signal line
-            ):
-                # if position != TradeAction.ENTER_LONG.value:
-                signals.iloc[i] = TradeAction.ENTER_LONG.value
-                # position = TradeAction.ENTER_LONG.value
-            # Short Entry Condition
-            elif (
-                data['close'].iloc[i] < vwap.iloc[i] and
-                rsi.iloc[i] > self.rsi_overbought and  # Overbought condition for short entry
-                zero_lag_macd.iloc[i] < signal_line.iloc[i] and
-                zero_lag_macd.iloc[i - 1] >= signal_line.iloc[i - 1]  # MACD crosses below signal line
-            ):
-                # if position != TradeAction.ENTER_SHORT.value:
-                signals.iloc[i] = TradeAction.ENTER_SHORT.value
-                # position = TradeAction.ENTER_SHORT.value
-            # # Exit Condition
-            # else:
-            #     if position is not None:
-            #         signals.iloc[i] = TradeAction.EXIT.value
-            #         position = None
+        position = TradeAction.EXIT.value
+        check_from = (len(data) - 2) if live else 1
+
+        for i in range(check_from, len(data)):
+            long_entry = (
+                data['close'].iloc[i] > vwap.iloc[i]
+                and rsi.iloc[i] < self.rsi_oversold
+                and zero_lag_macd.iloc[i] > signal_line.iloc[i]
+                and zero_lag_macd.iloc[i - 1] <= signal_line.iloc[i - 1]
+            )
+            short_entry = (
+                data['close'].iloc[i] < vwap.iloc[i]
+                and rsi.iloc[i] > self.rsi_overbought
+                and zero_lag_macd.iloc[i] < signal_line.iloc[i]
+                and zero_lag_macd.iloc[i - 1] >= signal_line.iloc[i - 1]
+            )
+
+            long_exit = (
+                position == TradeAction.ENTER_LONG.value
+                and (
+                    data['close'].iloc[i] < vwap.iloc[i]
+                    or zero_lag_macd.iloc[i] < signal_line.iloc[i]
+                    or rsi.iloc[i] > self.rsi_overbought
+                )
+            )
+            short_exit = (
+                position == TradeAction.ENTER_SHORT.value
+                and (
+                    data['close'].iloc[i] > vwap.iloc[i]
+                    or zero_lag_macd.iloc[i] > signal_line.iloc[i]
+                    or rsi.iloc[i] < self.rsi_oversold
+                )
+            )
+
+            if position == TradeAction.EXIT.value:
+                if long_entry:
+                    position = TradeAction.ENTER_LONG.value
+                elif short_entry:
+                    position = TradeAction.ENTER_SHORT.value
+            elif long_exit or short_exit:
+                position = TradeAction.EXIT.value
+
+            signals.iloc[i] = position
 
         return signals
