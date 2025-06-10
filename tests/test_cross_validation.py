@@ -24,8 +24,9 @@ class DummyOptimizer:
 
 class DummyStrategy:
     def __init__(self, p):
-        self.stop_loss_pct = 0.1
-        self.take_profit_pct = 0.2
+        # store as decimal from percentage inputs
+        self.stop_loss_pct = 10 / 100
+        self.take_profit_pct = 20 / 100
     def generate_signals(self, data):
         return pd.Series({data.index[0]: TradeAction.ENTER_LONG.value,
                           data.index[-1]: TradeAction.EXIT.value})
