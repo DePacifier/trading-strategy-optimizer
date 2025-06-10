@@ -45,6 +45,12 @@ def test_risk_based_position_sizing():
     assert size == 10
 
 
+def test_risk_based_position_sizing_zero_distance():
+    sm = StrategyManager(None, initial_capital=1000, risk_per_trade=0.1)
+    size = sm.risk_based_position_sizing(100, 100)
+    assert size == 0
+
+
 def test_execute_strategy_basic():
     data = make_data()
     sm = StrategyManager(data, initial_capital=100, risk_per_trade=0.1)

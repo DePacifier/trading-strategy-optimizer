@@ -204,6 +204,8 @@ class StrategyManager:
     def risk_based_position_sizing(self, entry_price, stop_loss_price):
         risk_amount = self.available_capital * self.risk_per_trade
         stop_loss_distance = abs(entry_price - stop_loss_price)
+        if stop_loss_distance == 0:
+            return 0
         position_size = risk_amount / stop_loss_distance
         max_position_size = self.available_capital / entry_price
         return min(position_size, max_position_size)
