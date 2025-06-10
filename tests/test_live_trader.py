@@ -215,7 +215,7 @@ def test_partial_candle_exit():
         return sm.trades[0]
 
     trade = asyncio.run(run_case())
-    assert trade.exit_price == 90
+    assert trade.exit_price == 99
     assert trade.exit_time == data.index[1]
 
 

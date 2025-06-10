@@ -54,6 +54,8 @@ class LiveTrader:
             return False
 
         ts = new_candle.index[0]
+        open_price = float(new_candle['open'].iloc[0])
+        self.strategy_manager.process_pending_entry(ts, open_price)
         high = float(new_candle['high'].iloc[0])
         low = float(new_candle['low'].iloc[0])
         self.strategy_manager.check_exit_prices(ts, high, low)
