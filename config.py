@@ -26,8 +26,9 @@ STRATEGY_PARAMS = {
     'macd_fast_length': 9,
     'macd_slow_length': 16,
     'macd_signal_length': 3,
-    'stop_loss_pct': 0.01,
-    'take_profit_pct': 0.0529
+    # Stop-loss and take-profit expressed in percentages (1 = 1%)
+    'stop_loss_pct': 1,
+    'take_profit_pct': 5.29
 }
 
 # Risk management parameters

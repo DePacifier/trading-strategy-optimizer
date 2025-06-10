@@ -17,8 +17,8 @@ class HistoryDependentStrategy:
     """Strategy that only starts generating signals once three candles are present."""
 
     def __init__(self):
-        self.stop_loss_pct = 0.1
-        self.take_profit_pct = 0.2
+        self.stop_loss_pct = 10 / 100
+        self.take_profit_pct = 20 / 100
 
     def generate_signals(self, data):
         signals = pd.Series(TradeAction.EXIT.value, index=data.index)
@@ -30,8 +30,8 @@ class HistoryDependentStrategy:
 
 class DummyStrategy:
     def __init__(self):
-        self.stop_loss_pct = 0.1
-        self.take_profit_pct = 0.2
+        self.stop_loss_pct = 10 / 100
+        self.take_profit_pct = 20 / 100
 
     def generate_signals(self, data):
         signals = pd.Series(TradeAction.EXIT.value, index=data.index)
