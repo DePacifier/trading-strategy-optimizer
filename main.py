@@ -33,7 +33,7 @@ def main():
         interval=Client.KLINE_INTERVAL_4HOUR,
         start_time="1 Mar, 2024",
         end_time="6 Jun, 2025",
-        strategies=[EMACrossover],
+        strategies=[ZeroLagMACD_OBV_Strategy],
         param_ranges={
             'MACD_RSIStrategy': [
                 {'name': 'macd_short_window', 'type': 'int', 'low': 5, 'high': 20},
@@ -93,10 +93,10 @@ def main():
                 {'name': 'take_profit_pct', 'type': 'int', 'low': 1, 'high': 4}
             ],
             'EMACrossover': [
-                {'name': 'short_window', 'type': 'int', 'low': 3, 'high': 15},
+                {'name': 'short_window', 'type': 'int', 'low': 3, 'high': 25},
                 {'name': 'long_window', 'type': 'int', 'low': 10, 'high': 50},
-                {'name': 'stop_loss_pct', 'type': 'int', 'low': 1, 'high': 2},
-                {'name': 'take_profit_pct', 'type': 'int', 'low': 1, 'high': 3}
+                {'name': 'stop_loss_pct', 'type': 'int', 'low': 1, 'high': 10},
+                {'name': 'take_profit_pct', 'type': 'int', 'low': 1, 'high': 10}
             ],
             'MACD_RSI_CMF_Strategy': [
                 {'name': 'macd_short_window', 'type': 'int', 'low': 5, 'high': 20},
@@ -116,7 +116,7 @@ def main():
                 {'name': 'take_profit_pct', 'type': 'int', 'low': 1, 'high': 4}
             ]
         },
-        n_iterations=50
+        n_iterations=100
     )
 
     # Generate the report with a dynamic file name
