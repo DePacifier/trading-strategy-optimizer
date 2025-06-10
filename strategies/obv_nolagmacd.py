@@ -25,7 +25,7 @@ class ZeroLagMACD_OBV_Strategy(Strategy):
         return zlema
 
     def generate_signals(self, data):
-        signals = pd.Series(index=data.index)
+        signals = pd.Series(index=data.index, dtype=int)
         signals[:] = TradeAction.EXIT.value
 
         # Zero Lag MACD calculation
@@ -40,20 +40,41 @@ class ZeroLagMACD_OBV_Strategy(Strategy):
         obv = (data['close'].diff().apply(lambda x: 1 if x > 0 else (-1 if x < 0 else 0)) * data['volume']).cumsum()
         obv_smooth = obv.rolling(window=self.obv_smoothing_length).mean()
 
+        position = TradeAction.EXIT.value
         for i in range(1, len(data)):
-            # Long Entry Condition
-            if (
-                zero_lag_macd.iloc[i] > macd_signal.iloc[i] and
-                zero_lag_macd.iloc[i - 1] <= macd_signal.iloc[i - 1] and
-                obv_smooth.iloc[i] > obv_smooth.iloc[i - 1]  # OBV is increasing
-            ):
-                signals.iloc[i] = TradeAction.ENTER_LONG.value
-            # # Short Entry Condition
-            elif (
-                zero_lag_macd.iloc[i] < macd_signal.iloc[i] and
-                zero_lag_macd.iloc[i - 1] >= macd_signal.iloc[i - 1] and
-                obv_smooth.iloc[i] < obv_smooth.iloc[i - 1]  # OBV is decreasing
-            ):
-                signals.iloc[i] = TradeAction.ENTER_SHORT.value
+            long_entry = (
+                zero_lag_macd.iloc[i] > macd_signal.iloc[i]
+                and zero_lag_macd.iloc[i - 1] <= macd_signal.iloc[i - 1]
+                and obv_smooth.iloc[i] > obv_smooth.iloc[i - 1]
+            )
+            short_entry = (
+                zero_lag_macd.iloc[i] < macd_signal.iloc[i]
+                and zero_lag_macd.iloc[i - 1] >= macd_signal.iloc[i - 1]
+                and obv_smooth.iloc[i] < obv_smooth.iloc[i - 1]
+            )
+            long_exit = (
+                position == TradeAction.ENTER_LONG.value
+                and (
+                    zero_lag_macd.iloc[i] < macd_signal.iloc[i]
+                    or obv_smooth.iloc[i] < obv_smooth.iloc[i - 1]
+                )
+            )
+            short_exit = (
+                position == TradeAction.ENTER_SHORT.value
+                and (
+                    zero_lag_macd.iloc[i] > macd_signal.iloc[i]
+                    or obv_smooth.iloc[i] > obv_smooth.iloc[i - 1]
+                )
+            )
+
+            if position == TradeAction.EXIT.value:
+                if long_entry:
+                    position = TradeAction.ENTER_LONG.value
+                elif short_entry:
+                    position = TradeAction.ENTER_SHORT.value
+            elif long_exit or short_exit:
+                position = TradeAction.EXIT.value
+
+            signals.iloc[i] = position
 
         return signals

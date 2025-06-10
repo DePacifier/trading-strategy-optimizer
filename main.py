@@ -68,7 +68,7 @@ def main():
                 {'name': 'take_profit_pct', 'type': 'float', 'low': 1, 'high': 6}
             ],
             'VWAP_RSI_ZeroLagMACDStrategy': [
-                # {'name': 'vwap_window', 'type': 'int', 'low': 5, 'high': 30},
+                {'name': 'vwap_window', 'type': 'int', 'low': 5, 'high': 30},
                 {'name': 'rsi_window', 'type': 'int', 'low': 5, 'high': 14},
                 {'name': 'rsi_overbought', 'type': 'int', 'low': 75, 'high': 95},
                 {'name': 'rsi_oversold', 'type': 'int', 'low': 5, 'high': 25},

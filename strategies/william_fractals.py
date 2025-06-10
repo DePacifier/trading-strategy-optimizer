@@ -9,7 +9,7 @@ class WilliamsFractals(Strategy):
         self.fractal_bars = fractal_bars if fractal_bars in [3, 5] else 3
 
     def generate_signals(self, data):
-        signals = pd.Series(index=data.index)
+        signals = pd.Series(index=data.index, dtype=int)
         signals[:] = TradeAction.EXIT.value
         
         if self.fractal_bars == 5:
@@ -35,7 +35,21 @@ class WilliamsFractals(Strategy):
                 (data['low'].shift(self.period + 1) > data['low'].shift(self.period))
             )
 
-        signals[dn_fractal] = TradeAction.ENTER_SHORT.value
-        signals[up_fractal] = TradeAction.ENTER_LONG.value
+        position = TradeAction.EXIT.value
+        for i in range(len(data)):
+            long_entry = bool(up_fractal.iloc[i])
+            short_entry = bool(dn_fractal.iloc[i])
+            long_exit = position == TradeAction.ENTER_LONG.value and short_entry
+            short_exit = position == TradeAction.ENTER_SHORT.value and long_entry
+
+            if position == TradeAction.EXIT.value:
+                if long_entry:
+                    position = TradeAction.ENTER_LONG.value
+                elif short_entry:
+                    position = TradeAction.ENTER_SHORT.value
+            elif long_exit or short_exit:
+                position = TradeAction.EXIT.value
+
+            signals.iloc[i] = position
 
         return signals

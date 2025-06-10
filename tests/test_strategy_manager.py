@@ -7,16 +7,17 @@ from utils.enums import TradeAction, TradeMode, Position
 
 class DummyStrategy:
     def __init__(self):
-        self.stop_loss_pct = 0.10
-        self.take_profit_pct = 0.20
+        # inputs provided in percentages
+        self.stop_loss_pct = 10 / 100
+        self.take_profit_pct = 20 / 100
     def generate_signals(self, data):
         return pd.Series({data.index[0]: TradeAction.ENTER_LONG.value,
                            data.index[1]: TradeAction.EXIT.value})
 
 class LongShortStrategy:
     def __init__(self):
-        self.stop_loss_pct = 0.1
-        self.take_profit_pct = 0.2
+        self.stop_loss_pct = 10 / 100
+        self.take_profit_pct = 20 / 100
 
     def generate_signals(self, data):
         return pd.Series({
@@ -44,15 +45,21 @@ def test_risk_based_position_sizing():
     assert size == 10
 
 
+def test_risk_based_position_sizing_zero_distance():
+    sm = StrategyManager(None, initial_capital=1000, risk_per_trade=0.1)
+    size = sm.risk_based_position_sizing(100, 100)
+    assert size == 0
+
+
 def test_execute_strategy_basic():
     data = make_data()
     sm = StrategyManager(data, initial_capital=100, risk_per_trade=0.1)
     sm.execute_strategy(DummyStrategy())
     assert len(sm.trades) == 1
     trade = sm.trades[0]
-    assert trade.entry_time == data.index[0]
+    assert trade.entry_time == data.index[1]
     assert trade.exit_time == data.index[1]
-    assert trade.profit_loss == 10
+    assert trade.profit_loss == -10
 
 
 def test_trade_mode_long_only():

@@ -1,4 +1,5 @@
 from utils.enums import Position, TradeAction, TradeMode
+from utils.position_sizing import risk_based_position_sizing as util_risk_based_position_sizing
 
 class Trade:
     def __init__(self, entry_time, entry_price, position, stop_loss, take_profit, size):
@@ -42,12 +43,17 @@ class StrategyManager:
         self.available_capital = initial_capital
         self.risk_per_trade = risk_per_trade
         self.trade_mode = trade_mode
+        # When running live we might not yet have the next candle available
+        # when a signal is generated.  ``pending_entry`` stores the details of
+        # such trade so it can be opened once the next candle appears.
+        self.pending_entry = None
 
     def reset(self, data, trade_mode=None):
         self.data = data
         self.current_position = Position.NEUTRAL
         self.trades = []
         self.available_capital = self.initial_capital
+        self.pending_entry = None
         if trade_mode is not None:
             self.trade_mode = trade_mode
 
@@ -116,19 +122,14 @@ class StrategyManager:
         elif self.current_position != Position.NEUTRAL:
             self.exit_trade(timestamp)
             
-        self.current_position = position
-        entry_price = self.data.loc[timestamp, 'close']
-        
-        if position == Position.LONG:
-            stop_loss = entry_price * (1 - stop_loss_pct)
-            take_profit = entry_price * (1 + take_profit_pct)
-        elif position == Position.SHORT:
-            stop_loss = entry_price * (1 + stop_loss_pct)
-            take_profit = entry_price * (1 - take_profit_pct)
-        
-        size = self.risk_based_position_sizing(entry_price, stop_loss)
-        # Entry details: price=entry_price, stop_loss=stop_loss, take_profit=take_profit, size=size
-        self.trades.append(Trade(timestamp, entry_price, position, stop_loss, take_profit, size))
+        idx = self.data.index.get_loc(timestamp)
+        if idx + 1 < len(self.data):
+            next_ts = self.data.index[idx + 1]
+            entry_price = self.data.loc[next_ts, 'open']
+            self._open_trade(next_ts, entry_price, position, stop_loss_pct, take_profit_pct)
+        else:
+            # No next candle yet; defer execution until it becomes available
+            self.pending_entry = (position, stop_loss_pct, take_profit_pct)
 
     def exit_trade(self, timestamp):
         if self.current_position == Position.NEUTRAL:
@@ -202,8 +203,31 @@ class StrategyManager:
             self.current_position = Position.NEUTRAL
         
     def risk_based_position_sizing(self, entry_price, stop_loss_price):
-        risk_amount = self.available_capital * self.risk_per_trade
-        stop_loss_distance = abs(entry_price - stop_loss_price)
-        position_size = risk_amount / stop_loss_distance
-        max_position_size = self.available_capital / entry_price
-        return min(position_size, max_position_size)
+        return util_risk_based_position_sizing(
+            self.available_capital,
+            self.risk_per_trade,
+            entry_price,
+            stop_loss_price,
+        )
+
+    def _open_trade(self, entry_time, entry_price, position, stop_loss_pct, take_profit_pct):
+        """Helper used to actually create a Trade instance."""
+        self.current_position = position
+        if position == Position.LONG:
+            stop_loss = entry_price * (1 - stop_loss_pct)
+            take_profit = entry_price * (1 + take_profit_pct)
+        else:
+            stop_loss = entry_price * (1 + stop_loss_pct)
+            take_profit = entry_price * (1 - take_profit_pct)
+
+        size = self.risk_based_position_sizing(entry_price, stop_loss)
+        self.trades.append(Trade(entry_time, entry_price, position, stop_loss, take_profit, size))
+
+    def process_pending_entry(self, timestamp, open_price):
+        """Execute any trade that was waiting for the next candle."""
+        if self.pending_entry is None:
+            return
+
+        position, stop_loss_pct, take_profit_pct = self.pending_entry
+        self._open_trade(timestamp, open_price, position, stop_loss_pct, take_profit_pct)
+        self.pending_entry = None

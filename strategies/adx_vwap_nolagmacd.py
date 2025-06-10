@@ -54,7 +54,7 @@ class ADX_VWAP_ZeroLagEMAStrategy(Strategy):
         return adx
 
     def generate_signals(self, data):
-        signals = pd.Series(index=data.index)
+        signals = pd.Series(index=data.index, dtype=int)
         signals[:] = TradeAction.EXIT.value
 
         # VWAP calculation
@@ -76,22 +76,44 @@ class ADX_VWAP_ZeroLagEMAStrategy(Strategy):
         # ADX calculation
         adx = self.calculate_adx(data, self.adx_window)
 
+        position = TradeAction.EXIT.value
         for i in range(1, len(data)):
-            # Check if ADX is above the threshold, indicating a strong trend
-            if adx.iloc[i] > self.adx_threshold:
-                # Long Entry Condition
-                if (
-                    data['close'].iloc[i] > vwap.iloc[i] and
-                    zero_lag_macd.iloc[i] > signal_line.iloc[i] and
-                    zero_lag_macd.iloc[i - 1] <= signal_line.iloc[i - 1]
-                ):
-                    signals.iloc[i] = TradeAction.ENTER_LONG.value
-                # Short Entry Condition
-                elif (
-                    data['close'].iloc[i] < vwap.iloc[i] and
-                    zero_lag_macd.iloc[i] < signal_line.iloc[i] and
-                    zero_lag_macd.iloc[i - 1] >= signal_line.iloc[i - 1]
-                ):
-                    signals.iloc[i] = TradeAction.ENTER_SHORT.value
+            trend_ok = adx.iloc[i] > self.adx_threshold
+            long_entry = (
+                trend_ok
+                and data['close'].iloc[i] > vwap.iloc[i]
+                and zero_lag_macd.iloc[i] > signal_line.iloc[i]
+                and zero_lag_macd.iloc[i - 1] <= signal_line.iloc[i - 1]
+            )
+            short_entry = (
+                trend_ok
+                and data['close'].iloc[i] < vwap.iloc[i]
+                and zero_lag_macd.iloc[i] < signal_line.iloc[i]
+                and zero_lag_macd.iloc[i - 1] >= signal_line.iloc[i - 1]
+            )
+            long_exit = (
+                position == TradeAction.ENTER_LONG.value
+                and (
+                    data['close'].iloc[i] < vwap.iloc[i]
+                    or zero_lag_macd.iloc[i] < signal_line.iloc[i]
+                )
+            )
+            short_exit = (
+                position == TradeAction.ENTER_SHORT.value
+                and (
+                    data['close'].iloc[i] > vwap.iloc[i]
+                    or zero_lag_macd.iloc[i] > signal_line.iloc[i]
+                )
+            )
+
+            if position == TradeAction.EXIT.value:
+                if long_entry:
+                    position = TradeAction.ENTER_LONG.value
+                elif short_entry:
+                    position = TradeAction.ENTER_SHORT.value
+            elif long_exit or short_exit:
+                position = TradeAction.EXIT.value
+
+            signals.iloc[i] = position
 
         return signals
