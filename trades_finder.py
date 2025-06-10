@@ -16,6 +16,7 @@ from config import (
     RISK_PER_TRADE
 )
 from utils.enums import TradeAction
+from utils.position_sizing import risk_based_position_sizing
 
 def main():
     # Calculate start and end dates
@@ -109,27 +110,6 @@ def main():
     else:
         print("No new entry signal.")
         print(len(signals))
-
-def risk_based_position_sizing(available_capital, risk_per_trade, entry_price, stop_loss_price):
-    """
-    Calculate position size based on risk per trade.
-
-    Parameters:
-    - available_capital: Total capital available for trading.
-    - risk_per_trade: Fraction of capital to risk per trade (e.g., 0.01 for 1%).
-    - entry_price: The price at which the trade is entered.
-    - stop_loss_price: The price at which the stop loss is set.
-
-    Returns:
-    - position_size: The size of the position (in units of the asset).
-    """
-    risk_amount = available_capital * risk_per_trade
-    stop_loss_distance = abs(entry_price - stop_loss_price)
-    if stop_loss_distance == 0:
-        return 0
-    position_size = risk_amount / stop_loss_distance
-    max_position_size = available_capital / entry_price
-    return min(position_size, max_position_size)
 
 if __name__ == "__main__":
     main()
