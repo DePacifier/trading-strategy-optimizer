@@ -1,4 +1,5 @@
 from utils.enums import Position, TradeAction, TradeMode
+from utils.position_sizing import risk_based_position_sizing as util_risk_based_position_sizing
 
 class Trade:
     def __init__(self, entry_time, entry_price, position, stop_loss, take_profit, size):
@@ -202,8 +203,9 @@ class StrategyManager:
             self.current_position = Position.NEUTRAL
         
     def risk_based_position_sizing(self, entry_price, stop_loss_price):
-        risk_amount = self.available_capital * self.risk_per_trade
-        stop_loss_distance = abs(entry_price - stop_loss_price)
-        position_size = risk_amount / stop_loss_distance
-        max_position_size = self.available_capital / entry_price
-        return min(position_size, max_position_size)
+        return util_risk_based_position_sizing(
+            self.available_capital,
+            self.risk_per_trade,
+            entry_price,
+            stop_loss_price,
+        )
