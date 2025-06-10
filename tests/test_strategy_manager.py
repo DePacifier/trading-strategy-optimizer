@@ -7,16 +7,17 @@ from utils.enums import TradeAction, TradeMode, Position
 
 class DummyStrategy:
     def __init__(self):
-        self.stop_loss_pct = 0.10
-        self.take_profit_pct = 0.20
+        # inputs provided in percentages
+        self.stop_loss_pct = 10 / 100
+        self.take_profit_pct = 20 / 100
     def generate_signals(self, data):
         return pd.Series({data.index[0]: TradeAction.ENTER_LONG.value,
                            data.index[1]: TradeAction.EXIT.value})
 
 class LongShortStrategy:
     def __init__(self):
-        self.stop_loss_pct = 0.1
-        self.take_profit_pct = 0.2
+        self.stop_loss_pct = 10 / 100
+        self.take_profit_pct = 20 / 100
 
     def generate_signals(self, data):
         return pd.Series({
