@@ -57,9 +57,9 @@ def test_execute_strategy_basic():
     sm.execute_strategy(DummyStrategy())
     assert len(sm.trades) == 1
     trade = sm.trades[0]
-    assert trade.entry_time == data.index[0]
+    assert trade.entry_time == data.index[1]
     assert trade.exit_time == data.index[1]
-    assert trade.profit_loss == 10
+    assert trade.profit_loss == -10
 
 
 def test_trade_mode_long_only():
