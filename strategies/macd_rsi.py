@@ -13,7 +13,7 @@ class MACD_RSIStrategy(Strategy):
         self.rsi_oversold = float(rsi_oversold)
 
     def generate_signals(self, data):
-        signals = pd.Series(index=data.index)
+        signals = pd.Series(index=data.index, dtype=int)
         signals[:] = TradeAction.EXIT.value
 
         # MACD calculation
@@ -24,16 +24,24 @@ class MACD_RSIStrategy(Strategy):
 
         # RSI calculation
         delta = data['close'].diff()
-        gain = (delta.where(delta > 0, 0)).rolling(window=self.rsi_window).mean()
-        loss = (-delta.where(delta < 0, 0)).rolling(window=self.rsi_window).mean()
+        gain = delta.where(delta > 0, 0).rolling(window=self.rsi_window).mean()
+        loss = -delta.where(delta < 0, 0).rolling(window=self.rsi_window).mean()
         rs = gain / loss
         rsi = 100 - (100 / (1 + rs))
 
-        # Generating signals
-        for i in range(len(data)):
-            if macd.iloc[i] > signal_line.iloc[i] and rsi.iloc[i] < self.rsi_oversold:
-                signals.iloc[i] = TradeAction.ENTER_LONG.value
-            # elif macd.iloc[i] < signal_line.iloc[i] and rsi.iloc[i] > self.rsi_overbought:
-            #     signals.iloc[i] = TradeAction.ENTER_SHORT.value
+        position = TradeAction.EXIT.value
+        for i in range(1, len(data)):
+            long_entry = macd.iloc[i] > signal_line.iloc[i] and rsi.iloc[i] < self.rsi_oversold
+            long_exit = position == TradeAction.ENTER_LONG.value and (
+                macd.iloc[i] < signal_line.iloc[i] or rsi.iloc[i] > self.rsi_overbought
+            )
+
+            if position == TradeAction.EXIT.value:
+                if long_entry:
+                    position = TradeAction.ENTER_LONG.value
+            elif long_exit:
+                position = TradeAction.EXIT.value
+
+            signals.iloc[i] = position
 
         return signals
