@@ -28,11 +28,13 @@ class VWAP_RSI_MACDStrategy(Strategy):
         signals = pd.Series(index=data.index, dtype=int)
         signals[:] = TradeAction.EXIT.value
 
-        # VWAP calculation
+        # VWAP calculation using a rolling window
         typical_price = (data['high'] + data['low'] + data['close']) / 3
-        cumulative_tp_vol = (typical_price * data['volume']).cumsum()
-        cumulative_vol = data['volume'].cumsum()
-        vwap = cumulative_tp_vol / cumulative_vol
+        tp_vol = typical_price * data['volume']
+        vwap = (
+            tp_vol.rolling(window=self.vwap_window, min_periods=1).sum()
+            / data['volume'].rolling(window=self.vwap_window, min_periods=1).sum()
+        )
 
         # RSI calculation
         delta = data['close'].diff()

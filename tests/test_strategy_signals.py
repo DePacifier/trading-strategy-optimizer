@@ -30,3 +30,66 @@ def test_moving_average_crossover_signals():
                 TradeAction.ENTER_SHORT.value, TradeAction.ENTER_SHORT.value,
                 TradeAction.ENTER_LONG.value]
     assert list(signals) == expected
+
+file_path_vwap = os.path.join(path, 'vwap_rsi_macd.py')
+spec_vwap = importlib.util.spec_from_file_location('strategies.vwap_rsi_macd', file_path_vwap)
+vwap_module = importlib.util.module_from_spec(spec_vwap)
+sys.modules['strategies.vwap_rsi_macd'] = vwap_module
+spec_vwap.loader.exec_module(vwap_module)
+VWAP_RSI_MACDStrategy = vwap_module.VWAP_RSI_MACDStrategy
+
+
+def test_vwap_window_influences_signals():
+    dates = pd.date_range('2024-01-01', periods=10)
+    close = [1,1,1,1,10,1,1,1,1,1]
+    data = pd.DataFrame({
+        'close': close,
+        'open': close,
+        'high': close,
+        'low':  close,
+        'volume':[1,1,1,1,100,1,1,1,1,1]
+    }, index=dates)
+
+    strat_short = VWAP_RSI_MACDStrategy(
+        vwap_window=1,
+        rsi_window=1,
+        rsi_overbought=101,
+        rsi_oversold=-1,
+        macd_short_window=2,
+        macd_long_window=3,
+        macd_signal_window=3,
+        stop_loss_pct=1,
+        take_profit_pct=1
+    )
+
+    strat_long = VWAP_RSI_MACDStrategy(
+        vwap_window=3,
+        rsi_window=1,
+        rsi_overbought=101,
+        rsi_oversold=-1,
+        macd_short_window=2,
+        macd_long_window=3,
+        macd_signal_window=3,
+        stop_loss_pct=1,
+        take_profit_pct=1
+    )
+
+    signals_short = strat_short.generate_signals(data)
+    signals_long = strat_long.generate_signals(data)
+
+    expected_short = [TradeAction.EXIT.value] * 10
+    expected_long = [
+        TradeAction.EXIT.value,
+        TradeAction.EXIT.value,
+        TradeAction.EXIT.value,
+        TradeAction.EXIT.value,
+        TradeAction.ENTER_LONG.value,
+        TradeAction.EXIT.value,
+        TradeAction.EXIT.value,
+        TradeAction.EXIT.value,
+        TradeAction.EXIT.value,
+        TradeAction.EXIT.value,
+    ]
+
+    assert list(signals_short) == expected_short
+    assert list(signals_long) == expected_long
