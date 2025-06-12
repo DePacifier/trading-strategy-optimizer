@@ -4,7 +4,9 @@ from .base_strategy import Strategy
 from utils.enums import TradeAction
 
 class BollingerBandsStrategy(Strategy):
-    def __init__(self, window, num_std):
+    def __init__(self, window, num_std,
+                 stop_loss_pct=0, take_profit_pct=0):
+        super().__init__(stop_loss_pct, take_profit_pct)
         self.window = int(window)
         self.num_std = num_std
 
