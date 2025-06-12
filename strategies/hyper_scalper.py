@@ -11,6 +11,7 @@ class HyperScalper(Strategy):
         ema_long,
         adx_window,
         adx_threshold,
+        pullback_window,
         stop_loss_pct,
         take_profit_pct,
     ):
@@ -20,6 +21,7 @@ class HyperScalper(Strategy):
         self.ema_long = max(1, int(ema_long))
         self.adx_window = max(1, int(adx_window))
         self.adx_threshold = float(adx_threshold)
+        self.pullback_window = max(1, int(pullback_window))
 
     def calculate_adx(self, data, window):
         high = data["high"]
@@ -68,7 +70,7 @@ class HyperScalper(Strategy):
                 and ema_fast.iloc[i] > ema_mid.iloc[i] > ema_long.iloc[i]
                 and adx.iloc[i] > self.adx_threshold
                 and last_dip_below is not None
-                and i - last_dip_below <= 5
+                and i - last_dip_below <= self.pullback_window
                 and data["close"].iloc[i - 1] <= ema_fast.iloc[i - 1]
                 and data["close"].iloc[i] > ema_fast.iloc[i]
             )
@@ -77,7 +79,7 @@ class HyperScalper(Strategy):
                 and ema_fast.iloc[i] < ema_mid.iloc[i] < ema_long.iloc[i]
                 and adx.iloc[i] > self.adx_threshold
                 and last_dip_above is not None
-                and i - last_dip_above <= 5
+                and i - last_dip_above <= self.pullback_window
                 and data["close"].iloc[i - 1] >= ema_fast.iloc[i - 1]
                 and data["close"].iloc[i] < ema_fast.iloc[i]
             )

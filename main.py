@@ -10,8 +10,12 @@ from strategies import (
     ZeroLagMACD_OBV_Strategy,
     EMACrossover,
     PriceBreakoutVolumeStrategy,
+    HyperScalper
 )
-from config import PRICE_BREAKOUT_VOLUME_RANGES
+from config import (
+    PRICE_BREAKOUT_VOLUME_RANGES,
+    HYPER_SCALPER_RANGES
+)
 from binance.client import Client
 from utils.enums import TradeMode
 
@@ -35,14 +39,19 @@ def main():
     # Set multiple objectives
     controller.set_objectives(['total_return'])
     
-    interval = Client.KLINE_INTERVAL_4HOUR
-    timeframe = interval
+    # Optimized Asset Parameters
+    symbol='BTCUSDT'
+    interval=Client.KLINE_INTERVAL_4HOUR
+    start_time="1 Mar, 2024"
+    end_time="6 Jun, 2025"
+    num_iterations=100
+    train_ratio=0.7
 
     best_results = controller.run(
-        symbol='BTCUSDT',
-        interval=interval,
-        start_time="1 Mar, 2024",
-        end_time="6 Jun, 2025",
+        symbol,
+        interval,
+        start_time,
+        end_time,
         strategies=[ZeroLagMACD_OBV_Strategy],
         param_ranges={
             'MACD_RSIStrategy': [
@@ -125,22 +134,15 @@ def main():
                 {'name': 'stop_loss_pct', 'type': 'int', 'low': 1, 'high': 2},
                 {'name': 'take_profit_pct', 'type': 'int', 'low': 1, 'high': 4}
             ],
-            'PriceBreakoutVolumeStrategy': PRICE_BREAKOUT_VOLUME_RANGES.get(
-                timeframe,
-                PRICE_BREAKOUT_VOLUME_RANGES['1h'],
-            ),
+            'PriceBreakoutVolumeStrategy': PRICE_BREAKOUT_VOLUME_RANGES.get('4h'),
+            'HyperScalper': HYPER_SCALPER_RANGES.get('4h')
         },
-        n_iterations=100
+        n_iterations = num_iterations,
+        train_ratio = train_ratio
     )
 
     # Generate the report with a dynamic file name
-    report_generator.generate_report(
-        best_results,
-        symbol='BTCUSDT',
-        interval=Client.KLINE_INTERVAL_4HOUR,
-        start_time="1 Mar, 2024",
-        end_time="6 Jun, 2025",
-    )
+    report_generator.generate_report(best_results, symbol, interval, start_time, end_time)
     
 
 if __name__ == "__main__":
