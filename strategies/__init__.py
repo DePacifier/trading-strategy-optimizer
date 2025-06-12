@@ -9,3 +9,4 @@ from .vwap_rsi_macd import VWAP_RSI_MACDStrategy
 from .william_fractals import WilliamsFractals
 from .vwap_rsi_nolagmacd import VWAP_RSI_ZeroLagMACDStrategy
 from .obv_nolagmacd import ZeroLagMACD_OBV_Strategy
+from .hyper_scalper import HyperScalper
