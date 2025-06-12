@@ -23,6 +23,7 @@ The optimiser ships with multiple algorithms and can run them in isolation or as
 - **Objective weighting** – optimise for one or several metrics (total return, win rate, Sharpe ratio, etc.) with optional weights.
 - **Risk based position sizing** – trades use a fixed risk percentage of the available capital.
 - **Long/short modes** – strategies can run in long only, short only or both directions.
+- **Configurable exits** – allow trades to close on stop-loss/take-profit only, signal based exits or both.
 - **Detailed PDF reports** – parameter table, train/test performance metrics and a list of all trades.
 - **Telegram notifications** – `trades_finder.py` can scan the latest data and push alerts when new entry signals appear.
 

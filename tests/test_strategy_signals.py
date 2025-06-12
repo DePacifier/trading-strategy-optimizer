@@ -237,6 +237,7 @@ def test_hyper_scalper_signals():
         ema_long=4,
         adx_window=1,
         adx_threshold=-1,
+        pullback_window=1,
         stop_loss_pct=1,
         take_profit_pct=1,
     )

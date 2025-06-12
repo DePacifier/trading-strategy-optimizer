@@ -35,7 +35,7 @@ class Trade:
 
 class StrategyManager:
     def __init__(self, data, initial_capital=100000, risk_per_trade=0.02,
-                 trade_mode=TradeMode.BOTH):
+                 trade_mode=TradeMode.BOTH, signal_exit: bool = True):
         self.data = data
         self.current_position = Position.NEUTRAL
         self.trades = []
@@ -43,12 +43,13 @@ class StrategyManager:
         self.available_capital = initial_capital
         self.risk_per_trade = risk_per_trade
         self.trade_mode = trade_mode
+        self.signal_exit = signal_exit
         # When running live we might not yet have the next candle available
         # when a signal is generated.  ``pending_entry`` stores the details of
         # such trade so it can be opened once the next candle appears.
         self.pending_entry = None
 
-    def reset(self, data, trade_mode=None):
+    def reset(self, data, trade_mode=None, signal_exit=None):
         self.data = data
         self.current_position = Position.NEUTRAL
         self.trades = []
@@ -56,6 +57,8 @@ class StrategyManager:
         self.pending_entry = None
         if trade_mode is not None:
             self.trade_mode = trade_mode
+        if signal_exit is not None:
+            self.signal_exit = signal_exit
 
     def execute_strategy(self, strategy):
         signals = strategy.generate_signals(self.data)
@@ -81,7 +84,11 @@ class StrategyManager:
             elif signal == TradeAction.ENTER_SHORT and self.current_position != Position.SHORT:
                 if self.trade_mode in (TradeMode.BOTH, TradeMode.SHORT_ONLY):
                     self.enter_trade(timestamp, Position.SHORT, strategy.stop_loss_pct, strategy.take_profit_pct)
-            elif signal == TradeAction.EXIT and self.current_position != Position.NEUTRAL:
+            elif (
+                signal == TradeAction.EXIT
+                and self.current_position != Position.NEUTRAL
+                and self.signal_exit
+            ):
                 self.exit_trade(timestamp)
 
     def execute_signals(self, signals, strategy):
@@ -112,7 +119,11 @@ class StrategyManager:
             elif signal == TradeAction.ENTER_SHORT and self.current_position != Position.SHORT:
                 if self.trade_mode in (TradeMode.BOTH, TradeMode.SHORT_ONLY):
                     self.enter_trade(timestamp, Position.SHORT, strategy.stop_loss_pct, strategy.take_profit_pct)
-            elif signal == TradeAction.EXIT and self.current_position != Position.NEUTRAL:
+            elif (
+                signal == TradeAction.EXIT
+                and self.current_position != Position.NEUTRAL
+                and self.signal_exit
+            ):
                 self.exit_trade(timestamp)
 
     def enter_trade(self, timestamp, position, stop_loss_pct, take_profit_pct):

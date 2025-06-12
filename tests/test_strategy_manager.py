@@ -37,6 +37,20 @@ def make_data():
     }, index=index)
 
 
+def make_data_no_exit():
+    index = [datetime(2024, 1, 1), datetime(2024, 1, 2)]
+    return pd.DataFrame(
+        {
+            "open": [100, 110],
+            "high": [105, 111],
+            "low": [95, 105],
+            "close": [100, 110],
+            "volume": [1000, 1000],
+        },
+        index=index,
+    )
+
+
 def test_risk_based_position_sizing():
     sm = StrategyManager(None, initial_capital=1000, risk_per_trade=0.1)
     size = sm.risk_based_position_sizing(100, 90)
@@ -77,3 +91,14 @@ def test_trade_mode_short_only():
     sm.execute_strategy(LongShortStrategy())
     assert len(sm.trades) == 1
     assert sm.trades[0].position == Position.SHORT
+
+
+def test_disable_signal_exit():
+    data = make_data_no_exit()
+    sm = StrategyManager(data, initial_capital=100, risk_per_trade=0.1, signal_exit=False)
+    sm.execute_strategy(DummyStrategy())
+    # Trade should remain open because exit signals are ignored
+    assert len(sm.trades) == 1
+    trade = sm.trades[0]
+    assert trade.exit_time is None
+    assert sm.current_position == Position.LONG
