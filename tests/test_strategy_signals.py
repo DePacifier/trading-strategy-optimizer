@@ -20,6 +20,7 @@ from strategies.macd_rsi import MACD_RSIStrategy
 from strategies.macd_rsi_cmf import MACD_RSI_CMF_Strategy
 from strategies.bollinger_bands_strategy import BollingerBandsStrategy
 from strategies.rsi_strategy import RSIStrategy
+from strategies.price_breakout_volume import PriceBreakoutVolumeStrategy
 
 def test_moving_average_crossover_signals():
     dates = pd.date_range('2024-01-01', periods=5)
@@ -186,4 +187,32 @@ def test_rsi_position_persistence():
     strat = RSIStrategy(rsi_period=2, oversold=30, overbought=70)
     signals = strat.generate_signals(data)
     expected = [TradeAction.EXIT.value] + [TradeAction.ENTER_SHORT.value] * 4
+    assert list(signals) == expected
+
+
+def test_price_breakout_volume_signals():
+    dates = pd.date_range('2024-01-01', periods=5)
+    close = [5, 4, 6, 3, 2]
+    data = pd.DataFrame({
+        'close': close,
+        'open': close,
+        'high': close,
+        'low': close,
+        'volume': [1, 1, 5, 5, 8],
+    }, index=dates)
+
+    strat = PriceBreakoutVolumeStrategy(
+        lookback=2,
+        volume_multiplier=1.5,
+        stop_loss_pct=1,
+        take_profit_pct=1,
+    )
+    signals = strat.generate_signals(data)
+    expected = [
+        TradeAction.EXIT.value,
+        TradeAction.EXIT.value,
+        TradeAction.ENTER_LONG.value,
+        TradeAction.EXIT.value,
+        TradeAction.ENTER_SHORT.value,
+    ]
     assert list(signals) == expected

@@ -4,7 +4,14 @@ from optimization import GeneticAlgorithmOptimizer, ParticleSwarmOptimizer, Baye
 from evaluation import ResultAnalyzer
 from reporting import ReportGenerator
 from trading_system_controller import TradingSystemController
-from strategies import VWAP_RSI_MACDStrategy, VWAP_RSI_ZeroLagMACDStrategy, ZeroLagMACD_OBV_Strategy, EMACrossover
+from strategies import (
+    VWAP_RSI_MACDStrategy,
+    VWAP_RSI_ZeroLagMACDStrategy,
+    ZeroLagMACD_OBV_Strategy,
+    EMACrossover,
+    PriceBreakoutVolumeStrategy,
+)
+from config import PRICE_BREAKOUT_VOLUME_RANGES
 from binance.client import Client
 from utils.enums import TradeMode
 
@@ -28,9 +35,12 @@ def main():
     # Set multiple objectives
     controller.set_objectives(['total_return'])
     
+    interval = Client.KLINE_INTERVAL_4HOUR
+    timeframe = interval
+
     best_results = controller.run(
         symbol='BTCUSDT',
-        interval=Client.KLINE_INTERVAL_4HOUR,
+        interval=interval,
         start_time="1 Mar, 2024",
         end_time="6 Jun, 2025",
         strategies=[ZeroLagMACD_OBV_Strategy],
@@ -114,7 +124,11 @@ def main():
                 {'name': 'fractal_bars', 'type': 'int', 'low': 3, 'high': 5},
                 {'name': 'stop_loss_pct', 'type': 'int', 'low': 1, 'high': 2},
                 {'name': 'take_profit_pct', 'type': 'int', 'low': 1, 'high': 4}
-            ]
+            ],
+            'PriceBreakoutVolumeStrategy': PRICE_BREAKOUT_VOLUME_RANGES.get(
+                timeframe,
+                PRICE_BREAKOUT_VOLUME_RANGES['1h'],
+            ),
         },
         n_iterations=100
     )
