@@ -4,7 +4,9 @@ from .base_strategy import Strategy
 from utils.enums import TradeAction
 
 class RSIStrategy(Strategy):
-    def __init__(self, rsi_period, oversold, overbought):
+    def __init__(self, rsi_period, oversold, overbought,
+                 stop_loss_pct=0, take_profit_pct=0):
+        super().__init__(stop_loss_pct, take_profit_pct)
         self.rsi_period = int(rsi_period)
         self.oversold = oversold
         self.overbought = overbought
