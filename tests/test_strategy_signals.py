@@ -21,6 +21,8 @@ from strategies.macd_rsi_cmf import MACD_RSI_CMF_Strategy
 from strategies.bollinger_bands_strategy import BollingerBandsStrategy
 from strategies.rsi_strategy import RSIStrategy
 from strategies.price_breakout_volume import PriceBreakoutVolumeStrategy
+from strategies.hyper_scalper import HyperScalper
+
 
 def test_moving_average_crossover_signals():
     dates = pd.date_range('2024-01-01', periods=5)
@@ -189,10 +191,10 @@ def test_rsi_position_persistence():
     expected = [TradeAction.EXIT.value] + [TradeAction.ENTER_SHORT.value] * 4
     assert list(signals) == expected
 
-
 def test_price_breakout_volume_signals():
     dates = pd.date_range('2024-01-01', periods=5)
     close = [5, 4, 6, 3, 2]
+
     data = pd.DataFrame({
         'close': close,
         'open': close,
@@ -214,5 +216,35 @@ def test_price_breakout_volume_signals():
         TradeAction.ENTER_LONG.value,
         TradeAction.EXIT.value,
         TradeAction.ENTER_SHORT.value,
+    ]
+    assert list(signals) == expected
+
+
+def test_hyper_scalper_signals():
+    dates = pd.date_range('2024-01-01', periods=4)
+    close = [10, 9, 11, 10]
+    data = pd.DataFrame({
+        'close': close,
+        'open': close,
+        'high': close,
+        'low': close,
+        'volume': [1] * 4,
+    }, index=dates)
+
+    strat = HyperScalper(
+        ema_fast=2,
+        ema_mid=3,
+        ema_long=4,
+        adx_window=1,
+        adx_threshold=-1,
+        stop_loss_pct=1,
+        take_profit_pct=1,
+    )
+    signals = strat.generate_signals(data)
+    expected = [
+        TradeAction.EXIT.value,
+        TradeAction.EXIT.value,
+        TradeAction.ENTER_LONG.value,
+        TradeAction.EXIT.value,
     ]
     assert list(signals) == expected
