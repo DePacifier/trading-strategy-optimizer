@@ -35,3 +35,19 @@ STRATEGY_PARAMS = {
 AVAILABLE_CAPITAL = 100  # Total capital in USD
 RISK_PER_TRADE = 0.10  # Risk per trade as a fraction of capital (e.g., 0.01 for 1%)
 
+# Default parameter ranges for the PriceBreakoutVolumeStrategy organised by timeframe
+PRICE_BREAKOUT_VOLUME_RANGES = {
+    '5m': [
+        {'name': 'lookback', 'type': 'int', 'low': 10, 'high': 50},
+        {'name': 'volume_multiplier', 'type': 'float', 'low': 1.0, 'high': 3.0},
+        {'name': 'stop_loss_pct', 'type': 'float', 'low': 1, 'high': 2},
+        {'name': 'take_profit_pct', 'type': 'float', 'low': 1, 'high': 4},
+    ],
+    '1h': [
+        {'name': 'lookback', 'type': 'int', 'low': 20, 'high': 100},
+        {'name': 'volume_multiplier', 'type': 'float', 'low': 1.0, 'high': 3.0},
+        {'name': 'stop_loss_pct', 'type': 'float', 'low': 1, 'high': 2},
+        {'name': 'take_profit_pct', 'type': 'float', 'low': 1, 'high': 6},
+    ],
+}
+
