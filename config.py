@@ -38,74 +38,74 @@ RISK_PER_TRADE = 0.10  # Risk per trade as a fraction of capital (e.g., 0.01 for
 # Default parameter ranges for the Different Strategies organized by timeframe
 HYPER_SCALPER_RANGES = {
     '5m': [
-        {'name': 'ema_fast', 'type': 'int', 'low': 10, 'high': 40},
-        {'name': 'ema_mid', 'type': 'int', 'low': 60, 'high': 160},
-        {'name': 'ema_long', 'type': 'int', 'low': 160, 'high': 400},
-        {'name': 'adx_window', 'type': 'int', 'low': 6, 'high': 12},
-        {'name': 'adx_threshold', 'type': 'int', 'low': 25, 'high': 35},
-        {'name': 'pullback_window', 'type': 'int', 'low': 3, 'high': 7},
-        {'name': 'stop_loss_pct', 'type': 'float', 'low': 0.3, 'high': 0.9},
-        {'name': 'take_profit_pct', 'type': 'float', 'low': 0.5, 'high': 2}
+        {'name': 'ema_fast', 'type': 'int', 'low': 10, 'high': 40, 'step': 5},
+        {'name': 'ema_mid', 'type': 'int', 'low': 60, 'high': 160, 'step': 20},
+        {'name': 'ema_long', 'type': 'int', 'low': 160, 'high': 400, 'step': 40},
+        {'name': 'adx_window', 'type': 'int', 'low': 6, 'high': 12, 'step': 2},
+        {'name': 'adx_threshold', 'type': 'int', 'low': 25, 'high': 35, 'step': 1},
+        {'name': 'pullback_window', 'type': 'int', 'low': 3, 'high': 7, 'step': 1},
+        {'name': 'stop_loss_pct', 'type': 'float', 'low': 0.3, 'high': 0.9, 'step': 0.15},
+        {'name': 'take_profit_pct', 'type': 'float', 'low': 0.5, 'high': 2, 'step': 0.25}
     ],
     '15m': [
-        {'name': 'ema_fast', 'type': 'int', 'low': 10, 'high': 40},
-        {'name': 'ema_mid', 'type': 'int', 'low': 50, 'high': 150},
-        {'name': 'ema_long', 'type': 'int', 'low': 150, 'high': 350},
-        {'name': 'adx_window', 'type': 'int', 'low': 8, 'high': 14},
-        {'name': 'adx_threshold', 'type': 'int', 'low': 24, 'high': 35},
-        {'name': 'pullback_window', 'type': 'int', 'low': 3, 'high': 7},
-        {'name': 'stop_loss_pct', 'type': 'float', 'low': 0.4, 'high': 1.2},
-        {'name': 'take_profit_pct', 'type': 'float', 'low': 0.8, 'high': 3}
+        {'name': 'ema_fast', 'type': 'int', 'low': 10, 'high': 40, 'step': 5},
+        {'name': 'ema_mid', 'type': 'int', 'low': 50, 'high': 150, 'step': 10},
+        {'name': 'ema_long', 'type': 'int', 'low': 150, 'high': 350, 'step': 25},
+        {'name': 'adx_window', 'type': 'int', 'low': 8, 'high': 14, 'step': 2},
+        {'name': 'adx_threshold', 'type': 'int', 'low': 24, 'high': 35, 'step': 1},
+        {'name': 'pullback_window', 'type': 'int', 'low': 3, 'high': 7, 'step': 1},
+        {'name': 'stop_loss_pct', 'type': 'float', 'low': 0.4, 'high': 1.2, 'step': 0.2},
+        {'name': 'take_profit_pct', 'type': 'float', 'low': 0.8, 'high': 3, 'step': 0.25}
     ],
     '30m': [
-        {'name': 'ema_fast', 'type': 'int', 'low': 12, 'high': 50},
-        {'name': 'ema_mid', 'type': 'int', 'low': 60, 'high': 180},
-        {'name': 'ema_long', 'type': 'int', 'low': 180, 'high': 400},
-        {'name': 'adx_window', 'type': 'int', 'low': 8, 'high': 16},
-        {'name': 'adx_threshold', 'type': 'int', 'low': 24, 'high': 35},
-        {'name': 'pullback_window', 'type': 'int', 'low': 3, 'high': 8},
-        {'name': 'stop_loss_pct', 'type': 'float', 'low': 0.5, 'high': 1.5},
-        {'name': 'take_profit_pct', 'type': 'float', 'low': 1.0, 'high': 4}
+        {'name': 'ema_fast', 'type': 'int', 'low': 12, 'high': 50, 'step': 6},
+        {'name': 'ema_mid', 'type': 'int', 'low': 60, 'high': 180, 'step': 20},
+        {'name': 'ema_long', 'type': 'int', 'low': 180, 'high': 400, 'step': 40},
+        {'name': 'adx_window', 'type': 'int', 'low': 8, 'high': 16, 'step': 2},
+        {'name': 'adx_threshold', 'type': 'int', 'low': 24, 'high': 35, 'step': 1},
+        {'name': 'pullback_window', 'type': 'int', 'low': 3, 'high': 8, 'step': 1},
+        {'name': 'stop_loss_pct', 'type': 'float', 'low': 0.5, 'high': 1.5, 'step': 0.25},
+        {'name': 'take_profit_pct', 'type': 'float', 'low': 1.0, 'high': 4, 'step': 0.5}
     ],
     '1h': [
-        {'name': 'ema_fast', 'type': 'int', 'low': 15, 'high': 60},
-        {'name': 'ema_mid', 'type': 'int', 'low': 80, 'high': 200},
-        {'name': 'ema_long', 'type': 'int', 'low': 200, 'high': 450},
-        {'name': 'adx_window', 'type': 'int', 'low': 10, 'high': 18},
-        {'name': 'adx_threshold', 'type': 'int', 'low': 22, 'high': 35},
-        {'name': 'pullback_window', 'type': 'int', 'low': 4, 'high': 9},
-        {'name': 'stop_loss_pct', 'type': 'float', 'low': 0.7, 'high': 2},
-        {'name': 'take_profit_pct', 'type': 'float', 'low': 1.5, 'high': 6}
+        {'name': 'ema_fast', 'type': 'int', 'low': 15, 'high': 60, 'step': 5},
+        {'name': 'ema_mid', 'type': 'int', 'low': 80, 'high': 200, 'step': 20},
+        {'name': 'ema_long', 'type': 'int', 'low': 200, 'high': 450, 'step': 50},
+        {'name': 'adx_window', 'type': 'int', 'low': 10, 'high': 18, 'step': 2},
+        {'name': 'adx_threshold', 'type': 'int', 'low': 22, 'high': 35, 'step': 1},
+        {'name': 'pullback_window', 'type': 'int', 'low': 4, 'high': 9, 'step': 1},
+        {'name': 'stop_loss_pct', 'type': 'float', 'low': 0.7, 'high': 2, 'step': 0.25},
+        {'name': 'take_profit_pct', 'type': 'float', 'low': 1.5, 'high': 6, 'step': 0.5}
     ],
     '4h': [
-        {'name': 'ema_fast', 'type': 'int', 'low': 18, 'high': 70},
-        {'name': 'ema_mid', 'type': 'int', 'low': 100, 'high': 220},
-        {'name': 'ema_long', 'type': 'int', 'low': 220, 'high': 500},
-        {'name': 'adx_window', 'type': 'int', 'low': 10, 'high': 20},
-        {'name': 'adx_threshold', 'type': 'int', 'low': 22, 'high': 34},
-        {'name': 'pullback_window', 'type': 'int', 'low': 4, 'high': 9},
-        {'name': 'stop_loss_pct', 'type': 'float', 'low': 1, 'high': 3},
-        {'name': 'take_profit_pct', 'type': 'float', 'low': 2, 'high': 10}
+        {'name': 'ema_fast', 'type': 'int', 'low': 18, 'high': 70, 'step': 6},
+        {'name': 'ema_mid', 'type': 'int', 'low': 100, 'high': 220, 'step': 20},
+        {'name': 'ema_long', 'type': 'int', 'low': 220, 'high': 500, 'step': 60},
+        {'name': 'adx_window', 'type': 'int', 'low': 10, 'high': 20, 'step': 2},
+        {'name': 'adx_threshold', 'type': 'int', 'low': 22, 'high': 34, 'step': 1},
+        {'name': 'pullback_window', 'type': 'int', 'low': 4, 'high': 9, 'step': 1},
+        {'name': 'stop_loss_pct', 'type': 'float', 'low': 1, 'high': 3, 'step': 0.5},
+        {'name': 'take_profit_pct', 'type': 'float', 'low': 2, 'high': 10, 'step': 1}
     ],
     '1d': [
-        {'name': 'ema_fast', 'type': 'int', 'low': 20, 'high': 80},
-        {'name': 'ema_mid', 'type': 'int', 'low': 100, 'high': 250},
-        {'name': 'ema_long', 'type': 'int', 'low': 250, 'high': 600},
-        {'name': 'adx_window', 'type': 'int', 'low': 10, 'high': 20},
-        {'name': 'adx_threshold', 'type': 'int', 'low': 20, 'high': 34},
-        {'name': 'pullback_window', 'type': 'int', 'low': 5, 'high': 10},
-        {'name': 'stop_loss_pct', 'type': 'float', 'low': 2, 'high': 6},
-        {'name': 'take_profit_pct', 'type': 'float', 'low': 4, 'high': 18}
+        {'name': 'ema_fast', 'type': 'int', 'low': 20, 'high': 80, 'step': 10},
+        {'name': 'ema_mid', 'type': 'int', 'low': 100, 'high': 250, 'step': 25},
+        {'name': 'ema_long', 'type': 'int', 'low': 250, 'high': 600, 'step': 50},
+        {'name': 'adx_window', 'type': 'int', 'low': 10, 'high': 20, 'step': 2},
+        {'name': 'adx_threshold', 'type': 'int', 'low': 20, 'high': 34, 'step': 1},
+        {'name': 'pullback_window', 'type': 'int', 'low': 5, 'high': 10, 'step': 1},
+        {'name': 'stop_loss_pct', 'type': 'float', 'low': 2, 'high': 6, 'step': 1},
+        {'name': 'take_profit_pct', 'type': 'float', 'low': 4, 'high': 18, 'step': 2}
     ],
     '1w': [
-        {'name': 'ema_fast', 'type': 'int', 'low': 4, 'high': 20},
-        {'name': 'ema_mid', 'type': 'int', 'low': 20, 'high': 60},
-        {'name': 'ema_long', 'type': 'int', 'low': 60, 'high': 120},
-        {'name': 'adx_window', 'type': 'int', 'low': 10, 'high': 20},
-        {'name': 'adx_threshold', 'type': 'int', 'low': 20, 'high': 34},
-        {'name': 'pullback_window', 'type': 'int', 'low': 5, 'high': 10},
-        {'name': 'stop_loss_pct', 'type': 'float', 'low': 4, 'high': 12},
-        {'name': 'take_profit_pct', 'type': 'float', 'low': 8, 'high': 35}
+        {'name': 'ema_fast', 'type': 'int', 'low': 4, 'high': 20, 'step': 2},
+        {'name': 'ema_mid', 'type': 'int', 'low': 20, 'high': 60, 'step': 4},
+        {'name': 'ema_long', 'type': 'int', 'low': 60, 'high': 120, 'step': 10},
+        {'name': 'adx_window', 'type': 'int', 'low': 10, 'high': 20, 'step': 2},
+        {'name': 'adx_threshold', 'type': 'int', 'low': 20, 'high': 34, 'step': 1},
+        {'name': 'pullback_window', 'type': 'int', 'low': 5, 'high': 10, 'step': 1},
+        {'name': 'stop_loss_pct', 'type': 'float', 'low': 4, 'high': 12, 'step': 2},
+        {'name': 'take_profit_pct', 'type': 'float', 'low': 8, 'high': 35, 'step': 3}
     ]
 }
 
