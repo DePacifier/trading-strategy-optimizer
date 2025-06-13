@@ -3,12 +3,13 @@ from skopt.utils import use_named_args
 from skopt.space import Real, Integer
 from .optimizer import Optimizer
 import numpy as np
+from .utils import clamp_value
 
 class BayesianOptimizer(Optimizer):
     def optimize(self, objective_function, param_ranges, n_iterations, initial_point=None):
         def bounded_objective(x):
             try:
-                params = [int(val) if param['type'] == 'int' else val for val, param in zip(x, param_ranges)]
+                params = [clamp_value(val, spec) for val, spec in zip(x, param_ranges)]
                 result = -objective_function(params)  # sklearn minimizes, so we negate
                 if np.isinf(result) or np.isnan(result):
                     return 1e10  # Return a large finite number instead of infinity
@@ -42,4 +43,5 @@ class BayesianOptimizer(Optimizer):
             acq_func='EI',  # Expected Improvement
         )
         
-        return [int(val) if param['type'] == 'int' else val for val, param in zip(result.x, param_ranges)]
+        return [clamp_value(val, spec) for val, spec in zip(result.x, param_ranges)]
+

@@ -59,7 +59,7 @@ All configuration lives in `main.py`. The important steps are:
 controller.set_objectives({'total_return': 70, 'sharpe_ratio': 30})
 ```
 
-2. **Specify strategies and parameter ranges.** Each entry in `param_ranges` describes a tunable parameter with `low`, `high` and `type` (`int` or `float`).
+2. **Specify strategies and parameter ranges.** Each entry in `param_ranges` describes a tunable parameter with `low`, `high`, `type` (`int` or `float`) and an optional `step` value to control the search granularity.
 3. **Select the optimisers** you wish to use – GA, PSO, Differential Evolution, Bayesian, or the `ParallelHybridOptimizer` which chains them together.
 4. **Run `main.py`** to start the optimisation.
 
