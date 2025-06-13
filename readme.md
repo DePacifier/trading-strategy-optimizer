@@ -121,6 +121,19 @@ Once added you can optimise it like the provided examples.
 - `trades_finder.py` – scans recent candles for a given strategy and sends Telegram messages if a new entry signal is detected.
 - `tests/` – a suite of unit tests covering the optimisers, strategies and reporting utilities. Run them with `pytest` to verify changes.
 
+## Strategy tester
+
+`strategy_tester.py` runs a single strategy with explicit parameter values and
+produces a PDF report. Provide the strategy name, a JSON file containing the
+parameters and the data range:
+
+```bash
+python strategy_tester.py --strategy HyperScalper --params params.json --symbol BTCUSDT --interval 1d --start 2020-01-01 --end 2024-01-01
+```
+
+The report will be saved under `reports/` using the same layout as the
+optimisation output.
+
 ## Project structure
 
 ```bash
@@ -133,6 +146,7 @@ Once added you can optimise it like the provided examples.
 ├── tests/                    # Unit tests
 ├── utils/                    # Enums and helpers
 ├── main.py                   # Entry point for optimisation
+├── strategy_tester.py        # Run a single strategy backtest
 ├── optimization/             # Optimisation algorithms
 ├── strategy_manager.py       # Trade management engine
 ├── trading_system_controller.py # High level orchestration
