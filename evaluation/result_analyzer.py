@@ -1,55 +1,94 @@
 import numpy as np
 
+
 class ResultAnalyzer:
-    def calculate_sharpe_ratio(self, trades, risk_free_rate=0.02):
-        returns = [trade.profit_loss for trade in trades if trade.profit_loss is not None]
+    def _per_period_returns(self, trades):
+        """Calculate returns normalised by trade capital."""
+        returns = []
+        for t in trades:
+            if t.profit_loss is None:
+                continue
+            capital = t.entry_price * t.size
+            if capital == 0:
+                continue
+            returns.append(t.profit_loss / capital)
+        return returns
+
+    def _annual_factor(self, interval):
+        """Return periods per year based on candle interval string."""
+        if not interval:
+            return 365
+        try:
+            value = int(interval[:-1])
+            unit = interval[-1]
+        except (ValueError, IndexError):
+            return 365
+
+        if unit == "m":
+            return 365 * 24 * 60 / value
+        if unit == "h":
+            return 365 * 24 / value
+        if unit == "d":
+            return 365 / value
+        return 365
+
+    def calculate_sharpe_ratio(self, trades, interval="1d", risk_free_rate=0.02):
+        returns = self._per_period_returns(trades)
 
         if len(returns) < 2:
             return -np.inf
-        
-        annual_factor = 365  # Assuming 365 trading days in a year
+
+        annual_factor = self._annual_factor(interval)
         returns_mean = np.mean(returns)
         returns_std = np.std(returns)
-        
+
         if returns_std == 0:
             return 0
-        
-        sharpe_ratio = (returns_mean - (risk_free_rate / annual_factor)) / returns_std * np.sqrt(annual_factor)
+
+        sharpe_ratio = (
+            (returns_mean - (risk_free_rate / annual_factor))
+            / returns_std
+            * np.sqrt(annual_factor)
+        )
         return sharpe_ratio
 
-    def calculate_sortino_ratio(self, trades, risk_free_rate=0.02):
-        returns = [trade.profit_loss for trade in trades if trade.profit_loss is not None]
-        
+    def calculate_sortino_ratio(self, trades, interval="1d", risk_free_rate=0.02):
+        returns = self._per_period_returns(trades)
+
         if len(returns) < 2:
             return -np.inf
-        
-        annual_factor = 365  # Assuming 365 trading days in a year
+
+        annual_factor = self._annual_factor(interval)
         returns_mean = np.mean(returns)
         downside_returns = [r for r in returns if r < 0]
         downside_std = np.std(downside_returns) if len(downside_returns) > 1 else 0
-        
+
         if downside_std == 0:
             return 0
-        
-        sortino_ratio = (returns_mean - (risk_free_rate / annual_factor)) / downside_std * np.sqrt(annual_factor)
+
+        sortino_ratio = (
+            (returns_mean - (risk_free_rate / annual_factor))
+            / downside_std
+            * np.sqrt(annual_factor)
+        )
         return sortino_ratio
 
-    def calculate_max_drawdown(self, trades):
-        returns = [trade.profit_loss for trade in trades if trade.profit_loss is not None]
+    def calculate_max_drawdown(self, trades, interval="1d"):
+        returns = self._per_period_returns(trades)
         if not returns:
             return 0
-        
+
         cumulative_returns = np.cumsum(returns)
         max_drawdown = 0
         peak = cumulative_returns[0]
-        
+
         for value in cumulative_returns[1:]:
             if value > peak:
                 peak = value
-            drawdown = (peak - value) / peak
+            drawdown = (peak - value) / peak if peak != 0 else 0
             if drawdown > max_drawdown:
                 max_drawdown = drawdown
-        
+
         return max_drawdown
     
     def calculate_win_loss_ratio(self, trades):
@@ -57,7 +96,7 @@ class ResultAnalyzer:
         losses = sum(1 for trade in trades if trade.profit_loss is not None and trade.profit_loss <= 0)
         return wins / losses if losses > 0 else float('inf')
 
-    def analyze(self, trades):
+    def analyze(self, trades, interval="1d"):
         if not trades:
             return {
                 'total_trades': 0,
@@ -85,9 +124,9 @@ class ResultAnalyzer:
             'win_rate': round(win_rate, 3),
             'total_return': round(total_return, 2),
             'total_costs': round(total_costs, 2),
-            'sharpe_ratio': round(self.calculate_sharpe_ratio(trades),3),
-            'sortino_ratio': round(self.calculate_sortino_ratio(trades),3),
-            'max_drawdown': round(self.calculate_max_drawdown(trades),3),
+            'sharpe_ratio': round(self.calculate_sharpe_ratio(trades, interval), 3),
+            'sortino_ratio': round(self.calculate_sortino_ratio(trades, interval), 3),
+            'max_drawdown': round(self.calculate_max_drawdown(trades, interval), 3),
             'win_loss_ratio': round(self.calculate_win_loss_ratio(trades),3)
         }
         
