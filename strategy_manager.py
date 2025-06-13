@@ -124,6 +124,14 @@ class StrategyManager:
             ):
                 self.exit_trade(timestamp)
 
+        # Close any open trade at the end of the data
+        last_ts = self.data.index[-1]
+        if self.current_position != Position.NEUTRAL:
+            self.exit_trade(last_ts)
+
+        # Discard pending entries if there is no candle to open them
+        self.pending_entry = None
+
     def execute_signals(self, signals, strategy):
         """Execute a precomputed set of signals.
 
