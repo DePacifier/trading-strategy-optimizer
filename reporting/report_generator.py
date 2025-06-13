@@ -93,10 +93,38 @@ class ReportGenerator:
             # Trades table
             if 'trades' in result:
                 elements.append(Paragraph("Trades", self.styles['Heading2']))
-                trade_data = [['Entry Time', 'Entry Price', 'Position', 'Exit Time', 'Exit Price', 'PROFIT/LOSS', 'Size', "CAPITAL"]] + [
-                    [convert_to_eat(trade['entry_time']), ffloat(trade['entry_price']), fpos(trade['position']), convert_to_eat(trade['exit_time']), ffloat(trade['exit_price']), ffloat(trade['profit_loss']), ffloat(trade['size']), ffloat(trade['remaining_capital'])]
-                    for trade in result['trades']
+
+                include_dataset = any('dataset' in t for t in result['trades'])
+                headers = [
+                    "Entry Time",
+                    "Entry Price",
+                    "Position",
+                    "Exit Time",
+                    "Exit Price",
+                    "PROFIT/LOSS",
+                    "Size",
+                    "CAPITAL",
                 ]
+                if include_dataset:
+                    headers.insert(0, "Dataset")
+
+                trade_rows = []
+                for trade in result['trades']:
+                    row = [
+                        convert_to_eat(trade['entry_time']),
+                        ffloat(trade['entry_price']),
+                        fpos(trade['position']),
+                        convert_to_eat(trade['exit_time']),
+                        ffloat(trade['exit_price']),
+                        ffloat(trade['profit_loss']),
+                        ffloat(trade['size']),
+                        ffloat(trade['remaining_capital']),
+                    ]
+                    if include_dataset:
+                        row.insert(0, trade.get('dataset', ''))
+                    trade_rows.append(row)
+
+                trade_data = [headers] + trade_rows
 
                 # Fit table columns to the available page width
                 col_width = doc.width / len(trade_data[0])
