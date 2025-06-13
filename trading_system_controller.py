@@ -54,49 +54,111 @@ class TradingSystemController:
 
         return score
 
-    def run(self, symbol, interval, start_time, end_time, strategies, param_ranges, n_iterations, train_ratio=0.7):
+    def _average_metrics(self, metrics_list):
+        if not metrics_list:
+            return {}
+        keys = metrics_list[0].keys()
+        averaged = {}
+        for key in keys:
+            averaged[key] = sum(m.get(key, 0) for m in metrics_list) / len(metrics_list)
+        return averaged
+
+    def _kfold_split(self, data, n_folds):
+        fold_size = len(data) // n_folds
+        if fold_size == 0:
+            raise ValueError("Not enough data for the number of folds")
+        splits = []
+        for i in range(n_folds):
+            start = i * fold_size
+            end = start + fold_size if i < n_folds - 1 else len(data)
+            test_data = data.iloc[start:end]
+            train_data = data.drop(test_data.index)
+            splits.append((train_data, test_data))
+        return splits
+
+    def run(
+        self,
+        symbol,
+        interval,
+        start_time,
+        end_time,
+        strategies,
+        param_ranges,
+        n_iterations,
+        train_ratio=0.7,
+        validation_mode="holdout",
+        n_folds=2,
+    ):
         logging.info("Starting trading system optimization")
 
         # Load data
         logging.info(f"Loading historical data for {symbol}")
         self.data = self.data_loader.fetch_historical_data(symbol, interval, start_time, end_time)
-        split_idx = int(len(self.data) * train_ratio)
-        self.train_data = self.data.iloc[:split_idx]
-        self.test_data = self.data.iloc[split_idx:]
 
         best_results = {}
+
+        if validation_mode == "holdout":
+            split_idx = int(len(self.data) * train_ratio)
+            self.train_data = self.data.iloc[:split_idx]
+            self.test_data = self.data.iloc[split_idx:]
+            splits = [(self.train_data, self.test_data)]
+        else:
+            splits = self._kfold_split(self.data, n_folds)
+
         for strategy_class in strategies:
             logging.info(f"Optimizing {strategy_class.__name__}")
             self.current_strategy_class = strategy_class
 
-            best_params = self.optimizer.optimize(
-                self.objective_function,
-                param_ranges[strategy_class.__name__],
-                n_iterations
-            )
-            
-            print("Identified best parameters are:")
-            print(best_params)
-            
-            best_strategy = strategy_class(*best_params)
+            fold_train_metrics = []
+            fold_test_metrics = []
+            all_trades = []
 
-            # Evaluate on training data
-            self.strategy_manager.reset(self.train_data)
-            self.strategy_manager.execute_strategy(best_strategy)
-            train_performance = self.result_analyzer.analyze(self.strategy_manager.trades)
+            for train_data, test_data in splits:
+                self.train_data = train_data
+                self.test_data = test_data
 
-            # Evaluate on test data
-            self.strategy_manager.reset(self.test_data)
-            self.strategy_manager.execute_strategy(best_strategy)
-            test_performance = self.result_analyzer.analyze(self.strategy_manager.trades)
+                best_params = self.optimizer.optimize(
+                    self.objective_function,
+                    param_ranges[strategy_class.__name__],
+                    n_iterations,
+                )
 
-            best_params = {param["name"]:best_param for param, best_param in zip(param_ranges[strategy_class.__name__], best_params)}
-            trades = [trade.get_data() for trade in self.strategy_manager.trades]
+                best_strategy = strategy_class(*best_params)
+
+                self.strategy_manager.reset(train_data)
+                self.strategy_manager.execute_strategy(best_strategy)
+                train_perf = self.result_analyzer.analyze(self.strategy_manager.trades)
+                train_trades = [trade.get_data() for trade in self.strategy_manager.trades]
+                for t in train_trades:
+                    t["dataset"] = "train"
+
+                self.strategy_manager.reset(test_data)
+                self.strategy_manager.execute_strategy(best_strategy)
+                test_perf = self.result_analyzer.analyze(self.strategy_manager.trades)
+                test_trades = [trade.get_data() for trade in self.strategy_manager.trades]
+                for t in test_trades:
+                    t["dataset"] = "test"
+
+                all_trades.extend(train_trades)
+                all_trades.extend(test_trades)
+
+                fold_train_metrics.append(train_perf)
+                fold_test_metrics.append(test_perf)
+
+            avg_train = self._average_metrics(fold_train_metrics)
+            avg_test = self._average_metrics(fold_test_metrics)
+
+            best_params_map = {
+                param["name"]: val
+                for param, val in zip(param_ranges[strategy_class.__name__], best_params)
+            }
+
             best_results[strategy_class.__name__] = {
-                'params': best_params,
-                'train_performance': train_performance,
-                'test_performance': test_performance,
-                'trades': trades
+                "params": best_params_map,
+                "train_performance": avg_train,
+                "test_performance": avg_test,
+                "folds": {"train": fold_train_metrics, "test": fold_test_metrics},
+                "trades": all_trades,
             }
 
         logging.info("Optimization completed")

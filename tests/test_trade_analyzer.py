@@ -20,6 +20,24 @@ def test_profit_loss_short():
     t = make_trade(100, 90, Position.SHORT)
     assert t.profit_loss == 10
 
+
+def test_profit_loss_with_costs():
+    t = Trade(
+        datetime(2024, 1, 1),
+        100,
+        Position.LONG,
+        0,
+        0,
+        1,
+        buy_fee=0.01,
+        sell_fee=0.01,
+        slippage=0.01,
+    )
+    t.exit_time = datetime(2024, 1, 2)
+    t.exit_price = 110
+    t.costs = 100 * 0.01 + 110 * 0.01 + (100 + 110) * 0.01
+    assert t.profit_loss == pytest.approx(110 - 100 - t.costs, rel=1e-9)
+
 def test_result_analyzer():
     trades = [
         make_trade(100, 110, Position.LONG),
@@ -32,6 +50,7 @@ def test_result_analyzer():
     assert perf['profitable_trades'] == 2
     assert perf['win_rate'] == pytest.approx(0.667, rel=1e-3)
     assert perf['total_return'] == pytest.approx(15.0, rel=1e-3)
+    assert perf['total_costs'] == 0
     assert perf['sharpe_ratio'] == pytest.approx(13.509, rel=1e-3)
     assert perf['sortino_ratio'] == 0
     assert perf['max_drawdown'] == 0.25

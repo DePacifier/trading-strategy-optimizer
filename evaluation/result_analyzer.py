@@ -64,6 +64,7 @@ class ResultAnalyzer:
                 'profitable_trades': 0,
                 'win_rate': 0,
                 'total_return': 0,
+                'total_costs': 0,
                 'sharpe_ratio': -np.inf,
                 'sortino_ratio': -np.inf,
                 'max_drawdown': 0,
@@ -76,12 +77,14 @@ class ResultAnalyzer:
 
         returns = [trade.profit_loss for trade in trades if trade.profit_loss is not None]
         total_return = sum(returns)
-        
+        total_costs = sum(getattr(trade, "costs", 0) for trade in trades)
+
         performance = {
             'total_trades': total_trades,
             'profitable_trades': profitable_trades,
             'win_rate': round(win_rate, 3),
             'total_return': round(total_return, 2),
+            'total_costs': round(total_costs, 2),
             'sharpe_ratio': round(self.calculate_sharpe_ratio(trades),3),
             'sortino_ratio': round(self.calculate_sortino_ratio(trades),3),
             'max_drawdown': round(self.calculate_max_drawdown(trades),3),

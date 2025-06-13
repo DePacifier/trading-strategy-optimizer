@@ -11,12 +11,13 @@ class TradeRecorder:
         self._init_db()
         self._recorded = set()
 
-    def _init_db(self) -> None:
+    def _create_table(self) -> None:
         cur = self.conn.cursor()
         cur.execute(
             """
-            CREATE TABLE IF NOT EXISTS trades(
-                entry_time TEXT PRIMARY KEY,
+            CREATE TABLE trades(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                entry_time TEXT,
                 entry_price REAL,
                 position INTEGER,
                 exit_time TEXT,
@@ -25,16 +26,25 @@ class TradeRecorder:
                 stop_loss REAL,
                 take_profit REAL,
                 size REAL,
-                remaining_capital REAL
+                remaining_capital REAL,
+                UNIQUE(entry_time, position)
             )
             """
         )
         self.conn.commit()
 
+    def _init_db(self) -> None:
+        cur = self.conn.cursor()
+        cur.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='trades'"
+        )
+        if cur.fetchone() is None:
+            self._create_table()
+
     def sync(self, trades: Iterable[Trade]) -> None:
         """Sync the given trades with the database."""
         for trade in trades:
-            key = trade.entry_time
+            key = (trade.entry_time, trade.position)
             if key not in self._recorded:
                 self._insert_trade(trade)
                 self._recorded.add(key)
@@ -78,7 +88,7 @@ class TradeRecorder:
                 exit_price=?,
                 profit_loss=?,
                 remaining_capital=?
-            WHERE entry_time=?
+            WHERE entry_time=? AND position=?
             """,
             (
                 data["exit_time"],
@@ -86,6 +96,7 @@ class TradeRecorder:
                 data["profit_loss"],
                 data["remaining_capital"],
                 data["entry_time"],
+                data["position"],
             ),
         )
         self.conn.commit()
