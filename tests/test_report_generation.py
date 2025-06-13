@@ -26,6 +26,7 @@ def test_report_generation(tmp_path):
                     'exit_time': '2024-01-02 00:00:00',
                     'exit_price': 110,
                     'profit_loss': 10,
+                    'costs': 0,
                     'size': 1,
                     'remaining_capital': 110
                 }

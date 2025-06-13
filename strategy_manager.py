@@ -2,7 +2,18 @@ from utils.enums import Position, TradeAction, TradeMode
 from utils.position_sizing import risk_based_position_sizing as util_risk_based_position_sizing
 
 class Trade:
-    def __init__(self, entry_time, entry_price, position, stop_loss, take_profit, size):
+    def __init__(
+        self,
+        entry_time,
+        entry_price,
+        position,
+        stop_loss,
+        take_profit,
+        size,
+        buy_fee=0.0,
+        sell_fee=0.0,
+        slippage=0.0,
+    ):
         self.entry_time = entry_time
         self.entry_price = entry_price
         self.position = position
@@ -12,12 +23,21 @@ class Trade:
         self.take_profit = take_profit
         self.size = size
         self.remaining_capital = None
+        self.buy_fee = buy_fee
+        self.sell_fee = sell_fee
+        self.slippage = slippage
+        self.costs = 0.0
 
     @property
     def profit_loss(self):
         if self.exit_price is None:
             return None
-        return (self.exit_price - self.entry_price) * self.position.value * self.size
+        return (
+            (self.exit_price - self.entry_price)
+            * self.position.value
+            * self.size
+            - self.costs
+        )
     
     def get_data(self) -> dict:
         return {
@@ -27,6 +47,7 @@ class Trade:
             "exit_time": str(self.exit_time),
             "exit_price": self.exit_price,
             "profit_loss": self.profit_loss,
+            "costs": self.costs,
             "stop_loss": self.stop_loss,
             "take_profit": self.take_profit,
             "size": self.size,
@@ -34,8 +55,17 @@ class Trade:
         }
 
 class StrategyManager:
-    def __init__(self, data, initial_capital=100000, risk_per_trade=0.02,
-                 trade_mode=TradeMode.BOTH, signal_exit: bool = True):
+    def __init__(
+        self,
+        data,
+        initial_capital=100000,
+        risk_per_trade=0.02,
+        trade_mode=TradeMode.BOTH,
+        signal_exit: bool = True,
+        buy_fee: float = 0.0,
+        sell_fee: float = 0.0,
+        slippage: float = 0.0,
+    ):
         self.data = data
         self.current_position = Position.NEUTRAL
         self.trades = []
@@ -44,6 +74,9 @@ class StrategyManager:
         self.risk_per_trade = risk_per_trade
         self.trade_mode = trade_mode
         self.signal_exit = signal_exit
+        self.buy_fee = buy_fee
+        self.sell_fee = sell_fee
+        self.slippage = slippage
         # When running live we might not yet have the next candle available
         # when a signal is generated.  ``pending_entry`` stores the details of
         # such trade so it can be opened once the next candle appears.
@@ -181,7 +214,13 @@ class StrategyManager:
                 
         current_trade.exit_time = timestamp
         current_trade.exit_price = exit_price
-        
+
+        current_trade.costs = (
+            self.buy_fee * current_trade.entry_price * current_trade.size
+            + self.sell_fee * exit_price * current_trade.size
+            + self.slippage * (current_trade.entry_price + exit_price) * current_trade.size
+        )
+
         self.available_capital += current_trade.profit_loss
         current_trade.remaining_capital = self.available_capital
         
@@ -209,6 +248,11 @@ class StrategyManager:
         if exit_price is not None:
             current_trade.exit_time = timestamp
             current_trade.exit_price = exit_price
+            current_trade.costs = (
+                self.buy_fee * current_trade.entry_price * current_trade.size
+                + self.sell_fee * exit_price * current_trade.size
+                + self.slippage * (current_trade.entry_price + exit_price) * current_trade.size
+            )
             self.available_capital += current_trade.profit_loss
             current_trade.remaining_capital = self.available_capital
             self.current_position = Position.NEUTRAL
@@ -232,7 +276,19 @@ class StrategyManager:
             take_profit = entry_price * (1 - take_profit_pct)
 
         size = self.risk_based_position_sizing(entry_price, stop_loss)
-        self.trades.append(Trade(entry_time, entry_price, position, stop_loss, take_profit, size))
+        self.trades.append(
+            Trade(
+                entry_time,
+                entry_price,
+                position,
+                stop_loss,
+                take_profit,
+                size,
+                buy_fee=self.buy_fee,
+                sell_fee=self.sell_fee,
+                slippage=self.slippage,
+            )
+        )
 
     def process_pending_entry(self, timestamp, open_price):
         """Execute any trade that was waiting for the next candle."""
