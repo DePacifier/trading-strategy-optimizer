@@ -2,6 +2,7 @@ import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from datetime import datetime
 import pandas as pd
+import pytest
 from strategy_manager import StrategyManager
 from utils.enums import TradeAction, TradeMode, Position
 
@@ -74,6 +75,22 @@ def test_execute_strategy_basic():
     assert trade.entry_time == data.index[1]
     assert trade.exit_time == data.index[1]
     assert trade.profit_loss == -10
+
+
+def test_trade_costs_applied():
+    data = make_data()
+    sm = StrategyManager(
+        data,
+        initial_capital=100,
+        risk_per_trade=0.1,
+        buy_fee=0.01,
+        sell_fee=0.01,
+        slippage=0.01,
+    )
+    sm.execute_strategy(DummyStrategy())
+    trade = sm.trades[0]
+    assert trade.costs == pytest.approx(3.8, rel=1e-3)
+    assert trade.profit_loss == pytest.approx(-13.8, rel=1e-3)
 
 
 def test_trade_mode_long_only():
