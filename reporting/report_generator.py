@@ -70,7 +70,12 @@ class ReportGenerator:
 
             for heading, perf in perf_sections:
                 elements.append(Paragraph(heading, self.styles['Heading3']))
-                perf_data = [['Metric', 'Value']] + list(perf.items())
+                if perf.get('no_trades'):
+                    perf_data = [['No trades executed', '']]
+                else:
+                    perf_data = [['Metric', 'Value']] + [
+                        (k, v) for k, v in perf.items() if k != 'no_trades'
+                    ]
                 perf_table = Table(perf_data)
                 perf_table.setStyle(TableStyle([
                     ('BACKGROUND', (0, 0), (-1, 0), colors.grey),

@@ -156,6 +156,10 @@ class TradingSystemController:
 
             avg_train = self._average_metrics(fold_train_metrics)
             avg_test = self._average_metrics(fold_test_metrics)
+            if avg_train.get("total_trades", 0) == 0:
+                avg_train["no_trades"] = True
+            if avg_test.get("total_trades", 0) == 0:
+                avg_test["no_trades"] = True
 
             best_params_map = {
                 param["name"]: val
