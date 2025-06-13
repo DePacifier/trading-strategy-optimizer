@@ -1,19 +1,11 @@
 import multiprocessing as mp
 from .optimizer import Optimizer
+from .utils import clamp_value
 
 
 def clamp_params(params, param_ranges):
     """Clamp parameter values to their declared ranges and cast types."""
-    clamped = []
-    for val, spec in zip(params, param_ranges):
-        low, high = spec['low'], spec['high']
-        if spec['type'] == 'int':
-            val = int(round(val))
-        else:
-            val = float(val)
-        val = min(max(val, low), high)
-        clamped.append(val)
-    return clamped
+    return [clamp_value(val, spec) for val, spec in zip(params, param_ranges)]
 
 class ParallelHybridOptimizer(Optimizer):
     def __init__(self, ga_optimizer, pso_optimizer, bayesian_optimizer, differential_optimizer, n_processes=None):

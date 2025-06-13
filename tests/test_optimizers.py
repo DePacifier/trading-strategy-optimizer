@@ -57,3 +57,12 @@ def test_parallel_hybrid_optimizer():
     result = pho.optimize(quadratic_objective, param_ranges, n_iterations=8)
     assert abs(result[0] - 3) < 1.5
     assert param_ranges[0]['low'] <= result[0] <= param_ranges[0]['high']
+
+
+def test_parameter_step_handling():
+    np.random.seed(0)
+    ga = GeneticAlgorithmOptimizer()
+    step_ranges = [{'low': 0, 'high': 6, 'type': 'int', 'step': 2}]
+    result = ga.optimize(lambda p: -(p[0] - 4) ** 2, step_ranges, n_iterations=4)
+    assert (result[0] - step_ranges[0]['low']) % 2 == 0
+
