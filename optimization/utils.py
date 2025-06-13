@@ -6,6 +6,8 @@ def clamp_value(val, spec):
     low, high = spec['low'], spec['high']
     step = spec.get('step')
     if step is not None:
+        if step <= 0:
+            raise ValueError("spec['step'] must be positive")
         val = low + round((val - low) / step) * step
     if spec['type'] == 'int':
         val = int(round(val))
@@ -25,6 +27,8 @@ def sample_value(spec):
     low, high = spec['low'], spec['high']
     step = spec.get('step')
     if step is not None:
+        if step <= 0:
+            raise ValueError("spec['step'] must be positive")
         count = int(round((high - low) / step))
         values = [low + i * step for i in range(count + 1)]
         return random.choice(values)
