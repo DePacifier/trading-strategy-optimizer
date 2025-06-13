@@ -19,6 +19,10 @@ def clamp_value(val, spec):
         val = low + round((val - low) / step) * step
         if spec['type'] == 'int':
             val = int(round(val))
+    if spec['type'] == 'float':
+        decimals = spec.get('decimals', 2)
+        val = round(val, decimals)
+        val = min(max(val, low), high)
     return val
 
 
@@ -31,7 +35,9 @@ def sample_value(spec):
             raise ValueError("spec['step'] must be positive")
         count = int(round((high - low) / step))
         values = [low + i * step for i in range(count + 1)]
-        return random.choice(values)
-    if spec['type'] == 'int':
-        return random.randint(low, high)
-    return random.uniform(low, high)
+        val = random.choice(values)
+    elif spec['type'] == 'int':
+        val = random.randint(low, high)
+    else:
+        val = random.uniform(low, high)
+    return clamp_value(val, spec)
