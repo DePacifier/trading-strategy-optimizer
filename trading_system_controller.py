@@ -43,7 +43,9 @@ class TradingSystemController:
         strategy = self.current_strategy_class(*params)
         self.strategy_manager.reset(self.train_data)
         self.strategy_manager.execute_strategy(strategy)
-        performance = self.result_analyzer.analyze(self.strategy_manager.trades)
+        performance = self.result_analyzer.analyze(
+            self.strategy_manager.trades, self.interval
+        )
         
         score = 0.0
         for obj in self.objectives:
@@ -93,7 +95,10 @@ class TradingSystemController:
 
         # Load data
         logging.info(f"Loading historical data for {symbol}")
-        self.data = self.data_loader.fetch_historical_data(symbol, interval, start_time, end_time)
+        self.interval = interval
+        self.data = self.data_loader.fetch_historical_data(
+            symbol, interval, start_time, end_time
+        )
 
         best_results = {}
 
@@ -127,14 +132,18 @@ class TradingSystemController:
 
                 self.strategy_manager.reset(train_data)
                 self.strategy_manager.execute_strategy(best_strategy)
-                train_perf = self.result_analyzer.analyze(self.strategy_manager.trades)
+                train_perf = self.result_analyzer.analyze(
+                    self.strategy_manager.trades, self.interval
+                )
                 train_trades = [trade.get_data() for trade in self.strategy_manager.trades]
                 for t in train_trades:
                     t["dataset"] = "train"
 
                 self.strategy_manager.reset(test_data)
                 self.strategy_manager.execute_strategy(best_strategy)
-                test_perf = self.result_analyzer.analyze(self.strategy_manager.trades)
+                test_perf = self.result_analyzer.analyze(
+                    self.strategy_manager.trades, self.interval
+                )
                 test_trades = [trade.get_data() for trade in self.strategy_manager.trades]
                 for t in test_trades:
                     t["dataset"] = "test"

@@ -45,13 +45,13 @@ def test_result_analyzer():
         make_trade(100, 95, Position.LONG),
     ]
     ra = ResultAnalyzer()
-    perf = ra.analyze(trades)
+    perf = ra.analyze(trades, interval="1d")
     assert perf['total_trades'] == 3
     assert perf['profitable_trades'] == 2
     assert perf['win_rate'] == pytest.approx(0.667, rel=1e-3)
     assert perf['total_return'] == pytest.approx(15.0, rel=1e-3)
     assert perf['total_costs'] == 0
-    assert perf['sharpe_ratio'] == pytest.approx(13.509, rel=1e-3)
+    assert perf['sharpe_ratio'] == pytest.approx(13.494, rel=1e-3)
     assert perf['sortino_ratio'] == 0
     assert perf['max_drawdown'] == 0.25
     assert perf['win_loss_ratio'] == 2.0
