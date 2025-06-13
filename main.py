@@ -1,4 +1,5 @@
 from data import DataLoader
+from datetime import datetime, timedelta
 from strategy_manager import StrategyManager
 from optimization import GeneticAlgorithmOptimizer, ParticleSwarmOptimizer, BayesianOptimizer, ParallelHybridOptimizer, DifferentialEvolutionOptimizer
 from evaluation import ResultAnalyzer
@@ -42,8 +43,12 @@ def main():
     # Optimized Asset Parameters
     symbol='BTCUSDT'
     interval=Client.KLINE_INTERVAL_4HOUR
-    start_time="1 Mar, 2024"
-    end_time="12 Jun, 2025"
+    # Either specify a date range or a duration in days
+    duration_days = 365
+    end_dt = datetime.utcnow()
+    start_dt = end_dt - timedelta(days=duration_days)
+    start_time = start_dt.strftime("%d %b, %Y")
+    end_time = end_dt.strftime("%d %b, %Y")
     num_iterations=100
     train_ratio=0.7
 
