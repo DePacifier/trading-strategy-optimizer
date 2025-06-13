@@ -15,5 +15,5 @@ class ParticleSwarmOptimizer(Optimizer):
         #       For now we simply ignore `initial_guess` if provided.
         xopt, _ = pso(pso_objective, lb, ub, swarmsize=10, maxiter=n_iterations, debug=False)
 
-        print("XOPT result\n", xopt)
+        # print("XOPT result\n", xopt)
         return [int(val) if param['type'] == 'int' else val for val, param in zip(xopt, param_ranges)]

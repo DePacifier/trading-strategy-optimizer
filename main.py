@@ -24,7 +24,7 @@ def main():
     api_key = "Binance API KEY"
     api_secret = "Binance API Secret"
     data_loader = DataLoader(api_key, api_secret)
-    strategy_manager = StrategyManager(None, initial_capital=100, risk_per_trade=0.10, trade_mode= TradeMode.LONG_ONLY)
+    strategy_manager = StrategyManager(None, initial_capital=100, risk_per_trade=0.10, trade_mode=TradeMode.LONG_ONLY, signal_exit=False)
     ga_optimizer = GeneticAlgorithmOptimizer()
     pso_optimizer = ParticleSwarmOptimizer()
     bayesian_optimizer = BayesianOptimizer()
@@ -43,7 +43,7 @@ def main():
     symbol='BTCUSDT'
     interval=Client.KLINE_INTERVAL_4HOUR
     start_time="1 Mar, 2024"
-    end_time="6 Jun, 2025"
+    end_time="12 Jun, 2025"
     num_iterations=100
     train_ratio=0.7
 
@@ -52,7 +52,7 @@ def main():
         interval,
         start_time,
         end_time,
-        strategies=[ZeroLagMACD_OBV_Strategy],
+        strategies=[PriceBreakoutVolumeStrategy],
         param_ranges={
             'MACD_RSIStrategy': [
                 {'name': 'macd_short_window', 'type': 'int', 'low': 5, 'high': 20},
@@ -135,15 +135,15 @@ def main():
                 {'name': 'take_profit_pct', 'type': 'int', 'low': 1, 'high': 4}
             ],
             'PriceBreakoutVolumeStrategy': PRICE_BREAKOUT_VOLUME_RANGES.get('4h'),
-            'HyperScalper': HYPER_SCALPER_RANGES.get('4h')
+            'HyperScalper': HYPER_SCALPER_RANGES.get('1d')
         },
         n_iterations = num_iterations,
         train_ratio = train_ratio
     )
 
     # Generate the report with a dynamic file name
-    report_generator.generate_report(best_results, symbol, interval, start_time, end_time)
-    
+    report_generator.generate_report(best_results, symbol=symbol, interval=interval, start_time=start_time, end_time=end_time)
+    print("Optimization completed and report generated.")
 
 if __name__ == "__main__":
     main()
