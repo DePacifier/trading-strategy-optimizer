@@ -27,6 +27,14 @@ class LongShortStrategy:
             data.index[2]: TradeAction.EXIT.value
         })
 
+class EntryOnlyStrategy:
+    def __init__(self):
+        self.stop_loss_pct = 10 / 100
+        self.take_profit_pct = 20 / 100
+
+    def generate_signals(self, data):
+        return pd.Series({data.index[0]: TradeAction.ENTER_LONG.value})
+
 def make_data():
     index = [datetime(2024,1,1), datetime(2024,1,2), datetime(2024,1,3)]
     return pd.DataFrame({
@@ -114,8 +122,18 @@ def test_disable_signal_exit():
     data = make_data_no_exit()
     sm = StrategyManager(data, initial_capital=100, risk_per_trade=0.1, signal_exit=False)
     sm.execute_strategy(DummyStrategy())
-    # Trade should remain open because exit signals are ignored
+    # Trade should still be closed at the end of the data
     assert len(sm.trades) == 1
     trade = sm.trades[0]
-    assert trade.exit_time is None
-    assert sm.current_position == Position.LONG
+    assert trade.exit_time == data.index[-1]
+    assert sm.current_position == Position.NEUTRAL
+
+
+def test_exit_open_trade_at_end():
+    data = make_data_no_exit()
+    sm = StrategyManager(data, initial_capital=100, risk_per_trade=0.1)
+    sm.execute_strategy(EntryOnlyStrategy())
+    assert len(sm.trades) == 1
+    trade = sm.trades[0]
+    assert trade.exit_time == data.index[-1]
+    assert trade.profit_loss is not None
