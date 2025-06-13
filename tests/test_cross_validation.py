@@ -31,7 +31,7 @@ class DummyStrategy:
         return pd.Series({data.index[0]: TradeAction.ENTER_LONG.value,
                           data.index[-1]: TradeAction.EXIT.value})
 
-def test_cross_validation_split():
+def test_holdout_split():
     loader = DummyLoader()
     sm = StrategyManager(None)
     optimizer = DummyOptimizer()
@@ -43,3 +43,28 @@ def test_cross_validation_split():
     assert len(controller.test_data) == 2
     assert 'train_performance' in results['DummyStrategy']
     assert 'test_performance' in results['DummyStrategy']
+    datasets = {t['dataset'] for t in results['DummyStrategy']['trades']}
+    assert datasets == {'train', 'test'}
+
+
+def test_kfold_validation():
+    loader = DummyLoader()
+    sm = StrategyManager(None)
+    optimizer = DummyOptimizer()
+    controller = TradingSystemController(loader, sm, optimizer, ResultAnalyzer())
+    results = controller.run(
+        'SYM',
+        '1h',
+        None,
+        None,
+        [DummyStrategy],
+        {'DummyStrategy': [{'name': 'p', 'type': 'int', 'low': 0, 'high': 1}]},
+        n_iterations=1,
+        validation_mode='kfold',
+        n_folds=2,
+    )
+    assert len(results['DummyStrategy']['folds']['test']) == 2
+    assert 'train_performance' in results['DummyStrategy']
+    assert 'test_performance' in results['DummyStrategy']
+    datasets = {t['dataset'] for t in results['DummyStrategy']['trades']}
+    assert datasets == {'train', 'test'}
