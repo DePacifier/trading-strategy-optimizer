@@ -1,6 +1,7 @@
 import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 import random
+import math
 import numpy as np
 from optimization.genetic_algorithm import GeneticAlgorithmOptimizer
 from optimization.differential_evolution import DifferentialEvolutionOptimizer
@@ -65,4 +66,13 @@ def test_parameter_step_handling():
     step_ranges = [{'low': 0, 'high': 6, 'type': 'int', 'step': 2}]
     result = ga.optimize(lambda p: -(p[0] - 4) ** 2, step_ranges, n_iterations=4)
     assert (result[0] - step_ranges[0]['low']) % 2 == 0
+
+
+def test_float_parameter_step_handling():
+    np.random.seed(0)
+    ga = GeneticAlgorithmOptimizer()
+    step_ranges = [{'low': 0.0, 'high': 1.0, 'type': 'float', 'step': 0.25}]
+    result = ga.optimize(lambda p: -(p[0] - 0.75) ** 2, step_ranges, n_iterations=4)
+    mod = (result[0] - step_ranges[0]['low']) % 0.25
+    assert math.isclose(mod, 0.0, abs_tol=1e-8)
 
