@@ -186,11 +186,14 @@ def test_trade_recorder():
         cur = recorder.conn.cursor()
         cur.execute("SELECT COUNT(*) FROM trades")
         count = cur.fetchone()[0]
+        cur.execute("PRAGMA table_info(trades)")
+        cols = [r[1] for r in cur.fetchall()]
         recorder.close()
-        return count
+        return count, cols
 
-    count = asyncio.run(run_case())
+    count, cols = asyncio.run(run_case())
     assert count == 1
+    assert "id" in cols
 
 
 def test_partial_candle_exit():
