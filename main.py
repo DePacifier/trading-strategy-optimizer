@@ -1,5 +1,5 @@
 from data import DataLoader
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from strategy_manager import StrategyManager
 from optimization import GeneticAlgorithmOptimizer, ParticleSwarmOptimizer, BayesianOptimizer, ParallelHybridOptimizer, DifferentialEvolutionOptimizer
 from evaluation import ResultAnalyzer
@@ -25,12 +25,12 @@ def main():
     api_key = "Binance API KEY"
     api_secret = "Binance API Secret"
     data_loader = DataLoader(api_key, api_secret)
-    strategy_manager = StrategyManager(None, initial_capital=100, risk_per_trade=0.10, trade_mode=TradeMode.LONG_ONLY, signal_exit=False)
+    strategy_manager = StrategyManager(None, initial_capital=100, risk_per_trade=0.10, trade_mode=TradeMode.LONG_ONLY, signal_exit=False, buy_fee=0.001, sell_fee=0.001)
     ga_optimizer = GeneticAlgorithmOptimizer()
     pso_optimizer = ParticleSwarmOptimizer()
     bayesian_optimizer = BayesianOptimizer()
     differential_optimizer = DifferentialEvolutionOptimizer()
-    parallel_hybrid_optimizer = ParallelHybridOptimizer(ga_optimizer, pso_optimizer, bayesian_optimizer, differential_optimizer, )
+    parallel_hybrid_optimizer = ParallelHybridOptimizer(ga_optimizer, pso_optimizer, bayesian_optimizer, differential_optimizer)
     result_analyzer = ResultAnalyzer()
     report_generator = ReportGenerator()
 
@@ -38,14 +38,14 @@ def main():
     controller = TradingSystemController(data_loader, strategy_manager, parallel_hybrid_optimizer, result_analyzer)
     
     # Set multiple objectives
-    controller.set_objectives(['total_return'])
+    controller.set_objectives(['win_rate'])
     
     # Optimized Asset Parameters
     symbol='BTCUSDT'
-    interval=Client.KLINE_INTERVAL_4HOUR
+    interval=Client.KLINE_INTERVAL_1DAY
     # Either specify a date range or a duration in days
     duration_days = 365
-    end_dt = datetime.utcnow()
+    end_dt = datetime.now(timezone.utc)
     start_dt = end_dt - timedelta(days=duration_days)
     start_time = start_dt.strftime("%d %b, %Y")
     end_time = end_dt.strftime("%d %b, %Y")
@@ -57,7 +57,7 @@ def main():
         interval,
         start_time,
         end_time,
-        strategies=[PriceBreakoutVolumeStrategy],
+        strategies=[HyperScalper],
         param_ranges={
             'MACD_RSIStrategy': [
                 {'name': 'macd_short_window', 'type': 'int', 'low': 5, 'high': 20},
@@ -139,7 +139,7 @@ def main():
                 {'name': 'stop_loss_pct', 'type': 'int', 'low': 1, 'high': 2},
                 {'name': 'take_profit_pct', 'type': 'int', 'low': 1, 'high': 4}
             ],
-            'PriceBreakoutVolumeStrategy': PRICE_BREAKOUT_VOLUME_RANGES.get('4h'),
+            'PriceBreakoutVolumeStrategy': PRICE_BREAKOUT_VOLUME_RANGES.get('5m'),
             'HyperScalper': HYPER_SCALPER_RANGES.get('1d')
         },
         n_iterations = num_iterations,
