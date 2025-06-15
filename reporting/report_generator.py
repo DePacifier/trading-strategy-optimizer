@@ -1,5 +1,6 @@
 import os
 from pandas import DataFrame
+from uuid import uuid1
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
@@ -23,7 +24,7 @@ class ReportGenerator:
             parts = [symbol, start_time, end_time, interval]
             parts = [str(p).replace(' ', '').replace(',', '-') for p in parts if p]
             base = "-".join(parts) if parts else "trading_system_report"
-            filename = f"reports/{base}.pdf"
+            filename = f"reports/{base}__{str(uuid1())}.pdf"
 
         # Ensure the reports directory exists in case a custom filename is used
         os.makedirs(os.path.dirname(filename), exist_ok=True)

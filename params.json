@@ -1,0 +1,10 @@
+{
+    "ema_fast": 20,
+    "ema_mid": 100,
+    "ema_long": 250,
+    "adx_window": 12,
+    "adx_threshold": 20,
+    "pullback_window": 10,
+    "stop_loss_pct": 5,
+    "take_profit_pct": 6
+}
