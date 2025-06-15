@@ -1,4 +1,5 @@
 import logging
+from optimization.utils import decode_value
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -12,6 +13,7 @@ class TradingSystemController:
         self.train_data = None
         self.test_data = None
         self.current_strategy_class = None
+        self.current_param_ranges = None
         self.objectives = ['sharpe_ratio']
         self.objective_weights = {'sharpe_ratio': 1.0}
     
@@ -40,7 +42,14 @@ class TradingSystemController:
             self.objective_weights = {obj: eq_weight for obj in self.objectives}
 
     def objective_function(self, params):
-        strategy = self.current_strategy_class(*params)
+        if self.current_param_ranges:
+            decoded = [
+                decode_value(val, spec)
+                for val, spec in zip(params, self.current_param_ranges)
+            ]
+        else:
+            decoded = params
+        strategy = self.current_strategy_class(*decoded)
         self.strategy_manager.reset(self.train_data)
         self.strategy_manager.execute_strategy(strategy)
         performance = self.result_analyzer.analyze(
@@ -113,6 +122,7 @@ class TradingSystemController:
         for strategy_class in strategies:
             logging.info(f"Optimizing {strategy_class.__name__}")
             self.current_strategy_class = strategy_class
+            self.current_param_ranges = param_ranges[strategy_class.__name__]
 
             fold_train_metrics = []
             fold_test_metrics = []
@@ -124,11 +134,15 @@ class TradingSystemController:
 
                 best_params = self.optimizer.optimize(
                     self.objective_function,
-                    param_ranges[strategy_class.__name__],
+                    self.current_param_ranges,
                     n_iterations,
                 )
 
-                best_strategy = strategy_class(*best_params)
+                decoded_params = [
+                    decode_value(val, spec)
+                    for val, spec in zip(best_params, self.current_param_ranges)
+                ]
+                best_strategy = strategy_class(*decoded_params)
 
                 self.strategy_manager.reset(train_data)
                 self.strategy_manager.execute_strategy(best_strategy)
@@ -162,8 +176,8 @@ class TradingSystemController:
                 avg_test["no_trades"] = True
 
             best_params_map = {
-                param["name"]: val
-                for param, val in zip(param_ranges[strategy_class.__name__], best_params)
+                param["name"]: decode_value(val, param)
+                for param, val in zip(self.current_param_ranges, best_params)
             }
 
             best_results[strategy_class.__name__] = {

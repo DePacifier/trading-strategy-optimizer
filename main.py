@@ -11,11 +11,13 @@ from strategies import (
     ZeroLagMACD_OBV_Strategy,
     EMACrossover,
     PriceBreakoutVolumeStrategy,
-    HyperScalper
+    HyperScalper,
+    MarkovEntropyStrategy
 )
 from config import (
     PRICE_BREAKOUT_VOLUME_RANGES,
-    HYPER_SCALPER_RANGES
+    HYPER_SCALPER_RANGES,
+    MARKOV_ENTROPY_RANGES
 )
 from binance.client import Client
 from utils.enums import TradeMode
@@ -57,7 +59,7 @@ def main():
         interval,
         start_time,
         end_time,
-        strategies=[HyperScalper],
+        strategies=[HyperScalper, MarkovEntropyStrategy],
         param_ranges={
             'MACD_RSIStrategy': [
                 {'name': 'macd_short_window', 'type': 'int', 'low': 5, 'high': 20},
@@ -140,7 +142,8 @@ def main():
                 {'name': 'take_profit_pct', 'type': 'int', 'low': 1, 'high': 4}
             ],
             'PriceBreakoutVolumeStrategy': PRICE_BREAKOUT_VOLUME_RANGES.get('5m'),
-            'HyperScalper': HYPER_SCALPER_RANGES.get('1d')
+            'HyperScalper': HYPER_SCALPER_RANGES.get('1d'),
+            'MarkovEntropyStrategy': MARKOV_ENTROPY_RANGES.get('4h')
         },
         n_iterations = num_iterations,
         train_ratio = train_ratio

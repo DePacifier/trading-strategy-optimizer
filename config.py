@@ -154,3 +154,18 @@ PRICE_BREAKOUT_VOLUME_RANGES = {
     ]
 }
 
+
+MARKOV_ENTROPY_RANGES = {
+    '4h': [
+        {'name': 'lookback_days', 'type': 'int', 'low': 30, 'high': 120, 'step': 10},
+        {'name': 'edge_threshold', 'type': 'float', 'low': 0.05, 'high': 0.5, 'step': 0.05},
+        {'name': 'entropy_threshold', 'type': 'float', 'low': 0.5, 'high': 2.5, 'step': 0.25},
+        {'name': 'stationary_threshold', 'type': 'float', 'low': 0.05, 'high': 0.3, 'step': 0.05},
+        {'name': 'kl_threshold', 'type': 'float', 'low': 0.0, 'high': 0.5, 'step': 0.05},
+        {'name': 'bucket_level', 'type': 'list', 'values': ['hour', '4h', 'session']},
+        {'name': 'label_scheme', 'type': 'list', 'values': ['fixed', 'vol', 'quantile']},
+        {'name': 'stop_loss_pct', 'type': 'float', 'low': 1, 'high': 3, 'step': 0.5},
+        {'name': 'take_profit_pct', 'type': 'float', 'low': 2, 'high': 10, 'step': 1}
+    ]
+}
+

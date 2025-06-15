@@ -11,3 +11,4 @@ from .vwap_rsi_nolagmacd import VWAP_RSI_ZeroLagMACDStrategy
 from .obv_nolagmacd import ZeroLagMACD_OBV_Strategy
 from .price_breakout_volume import PriceBreakoutVolumeStrategy
 from .hyper_scalper import HyperScalper
+from .markov_entropy import MarkovEntropyStrategy

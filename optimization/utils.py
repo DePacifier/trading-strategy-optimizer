@@ -2,7 +2,20 @@ import random
 
 
 def clamp_value(val, spec):
-    """Clamp *val* to the range specified in *spec* and apply any step."""
+    """Clamp *val* to the range specified in *spec* and apply any step.
+
+    For ``type`` ``'list'`` the *val* represents an index into ``spec['values']``
+    and will be clamped to the valid range of indices.  The index is returned
+    without decoding so optimisers can continue to operate on numeric values.
+    """
+
+    if spec['type'] == 'list':
+        values = spec.get('values', [])
+        if not values:
+            raise ValueError("spec['values'] must contain at least one item")
+        idx = int(round(val))
+        return min(max(idx, 0), len(values) - 1)
+
     low, high = spec['low'], spec['high']
     step = spec.get('step')
     if step is not None:
@@ -28,6 +41,13 @@ def clamp_value(val, spec):
 
 def sample_value(spec):
     """Return a random value respecting type, range and step."""
+
+    if spec['type'] == 'list':
+        values = spec.get('values', [])
+        if not values:
+            raise ValueError("spec['values'] must contain at least one item")
+        return random.randint(0, len(values) - 1)
+
     low, high = spec['low'], spec['high']
     step = spec.get('step')
     if step is not None:
@@ -41,3 +61,15 @@ def sample_value(spec):
     else:
         val = random.uniform(low, high)
     return clamp_value(val, spec)
+
+
+def decode_value(val, spec):
+    """Decode *val* according to ``spec`` if it represents a list index."""
+    if spec['type'] == 'list':
+        values = spec.get('values', [])
+        if not values:
+            raise ValueError("spec['values'] must contain at least one item")
+        idx = int(round(val))
+        idx = min(max(idx, 0), len(values) - 1)
+        return values[idx]
+    return val
