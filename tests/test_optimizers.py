@@ -8,6 +8,7 @@ from optimization.differential_evolution import DifferentialEvolutionOptimizer
 from optimization.particle_swarm import ParticleSwarmOptimizer
 from optimization.bayesian_optimization import BayesianOptimizer
 from optimization.hybrid_optimizer import ParallelHybridOptimizer
+from optimization.utils import decode_value
 
 # Simple quadratic objective with maximum at x=3
 param_ranges = [{'low': 0, 'high': 5, 'type': 'float'}]
@@ -75,4 +76,18 @@ def test_float_parameter_step_handling():
     result = ga.optimize(lambda p: -(p[0] - 0.75) ** 2, step_ranges, n_iterations=4)
     mod = (result[0] - step_ranges[0]['low']) % 0.25
     assert math.isclose(mod, 0.0, abs_tol=1e-8)
+
+
+def test_list_parameter_handling():
+    np.random.seed(0)
+    ga = GeneticAlgorithmOptimizer()
+    spec = {'type': 'list', 'values': [0, 5, 10]}
+
+    def obj(params):
+        val = decode_value(params[0], spec)
+        return -(val - 5) ** 2
+
+    result = ga.optimize(obj, [spec], n_iterations=4)
+    decoded = decode_value(result[0], spec)
+    assert decoded in spec['values']
 
