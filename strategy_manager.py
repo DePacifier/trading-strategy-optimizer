@@ -65,6 +65,8 @@ class StrategyManager:
         buy_fee: float = 0.0,
         sell_fee: float = 0.0,
         slippage: float = 0.0,
+        intrabar_path: bool = False,
+        bar_magnifier=None,
     ):
         self.data = data
         self.current_position = Position.NEUTRAL
@@ -77,6 +79,8 @@ class StrategyManager:
         self.buy_fee = buy_fee
         self.sell_fee = sell_fee
         self.slippage = slippage
+        self.intrabar_path = intrabar_path
+        self.bar_magnifier = bar_magnifier
         # When running live we might not yet have the next candle available
         # when a signal is generated.  ``pending_entry`` stores the details of
         # such trade so it can be opened once the next candle appears.
@@ -189,36 +193,34 @@ class StrategyManager:
         
         current_trade = self.trades[-1]
         close_price = self.data.loc[timestamp, 'close']
+        open_price = self.data.loc[timestamp, 'open']
         high_price = self.data.loc[timestamp, 'high']
         low_price = self.data.loc[timestamp, 'low']
     
-        # For long positions
-        if self.current_position == Position.LONG:
-            # Check if stop-loss is hit
-            if low_price <= current_trade.stop_loss:
-                exit_price = current_trade.stop_loss
-            
-            # Check if take-profit is hit
-            elif high_price >= current_trade.take_profit:
-                exit_price = current_trade.take_profit
-
-            # Handle Edge cases (Gap issues, ...)
+        if self.intrabar_path or self.bar_magnifier is not None:
+            exit_price = self._compute_intrabar_exit(
+                open_price,
+                high_price,
+                low_price,
+                close_price,
+                current_trade,
+            )
+        else:
+            # For long positions
+            if self.current_position == Position.LONG:
+                if low_price <= current_trade.stop_loss:
+                    exit_price = current_trade.stop_loss
+                elif high_price >= current_trade.take_profit:
+                    exit_price = current_trade.take_profit
+                else:
+                    exit_price = close_price
             else:
-                exit_price = close_price
-
-        # For short positions
-        elif self.current_position == Position.SHORT:
-            # Check if stop-loss is hit
-            if high_price >= current_trade.stop_loss:
-                exit_price = current_trade.stop_loss
-
-            # Check if take-profit is hit
-            elif low_price <= current_trade.take_profit:
-                exit_price = current_trade.take_profit
-
-            # Handle Edge cases (Gap issues, ...)
-            else:
-                exit_price = close_price
+                if high_price >= current_trade.stop_loss:
+                    exit_price = current_trade.stop_loss
+                elif low_price <= current_trade.take_profit:
+                    exit_price = current_trade.take_profit
+                else:
+                    exit_price = close_price
                 
         current_trade.exit_time = timestamp
         current_trade.exit_price = exit_price
@@ -234,7 +236,7 @@ class StrategyManager:
         
         self.current_position = Position.NEUTRAL
 
-    def check_exit_prices(self, timestamp, high_price, low_price):
+    def check_exit_prices(self, timestamp, open_price, high_price, low_price, close_price):
         """Check stop-loss/take-profit based on intraperiod prices."""
         if self.current_position == Position.NEUTRAL:
             return
@@ -242,16 +244,25 @@ class StrategyManager:
         current_trade = self.trades[-1]
         exit_price = None
 
-        if self.current_position == Position.LONG:
-            if low_price <= current_trade.stop_loss:
-                exit_price = current_trade.stop_loss
-            elif high_price >= current_trade.take_profit:
-                exit_price = current_trade.take_profit
-        elif self.current_position == Position.SHORT:
-            if high_price >= current_trade.stop_loss:
-                exit_price = current_trade.stop_loss
-            elif low_price <= current_trade.take_profit:
-                exit_price = current_trade.take_profit
+        if self.intrabar_path or self.bar_magnifier is not None:
+            exit_price = self._compute_intrabar_exit(
+                open_price,
+                high_price,
+                low_price,
+                close_price,
+                current_trade,
+            )
+        else:
+            if self.current_position == Position.LONG:
+                if low_price <= current_trade.stop_loss:
+                    exit_price = current_trade.stop_loss
+                elif high_price >= current_trade.take_profit:
+                    exit_price = current_trade.take_profit
+            elif self.current_position == Position.SHORT:
+                if high_price >= current_trade.stop_loss:
+                    exit_price = current_trade.stop_loss
+                elif low_price <= current_trade.take_profit:
+                    exit_price = current_trade.take_profit
 
         if exit_price is not None:
             current_trade.exit_time = timestamp
@@ -272,6 +283,39 @@ class StrategyManager:
             entry_price,
             stop_loss_price,
         )
+
+    def _intrabar_path(self, open_price, high_price, low_price, close_price):
+        """Return price path within a candle using a simple heuristic."""
+        if abs(open_price - high_price) <= abs(open_price - low_price):
+            return [open_price, high_price, low_price, close_price]
+        return [open_price, low_price, high_price, close_price]
+
+    def _segment_exit(self, start, end, stop_loss, take_profit, position):
+        if end > start:
+            if position == Position.LONG and start <= take_profit <= end:
+                return take_profit
+            if position == Position.SHORT and start <= stop_loss <= end:
+                return stop_loss
+        elif end < start:
+            if position == Position.LONG and end <= stop_loss <= start:
+                return stop_loss
+            if position == Position.SHORT and end <= take_profit <= start:
+                return take_profit
+        return None
+
+    def _compute_intrabar_exit(self, open_price, high_price, low_price, close_price, trade):
+        path = self._intrabar_path(open_price, high_price, low_price, close_price)
+        for start, end in zip(path, path[1:]):
+            exit_price = self._segment_exit(
+                start,
+                end,
+                trade.stop_loss,
+                trade.take_profit,
+                trade.position,
+            )
+            if exit_price is not None:
+                return exit_price
+        return close_price
 
     def _open_trade(self, entry_time, entry_price, position, stop_loss_pct, take_profit_pct):
         """Helper used to actually create a Trade instance."""

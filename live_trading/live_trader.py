@@ -58,7 +58,8 @@ class LiveTrader:
         self.strategy_manager.process_pending_entry(ts, open_price)
         high = float(new_candle['high'].iloc[0])
         low = float(new_candle['low'].iloc[0])
-        self.strategy_manager.check_exit_prices(ts, high, low)
+        close_price = float(new_candle['close'].iloc[0])
+        self.strategy_manager.check_exit_prices(ts, open_price, high, low, close_price)
 
         if closed:
             # Only append closed candles to the history used for signal
