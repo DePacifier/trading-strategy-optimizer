@@ -137,3 +137,34 @@ def test_exit_open_trade_at_end():
     trade = sm.trades[0]
     assert trade.exit_time == data.index[-1]
     assert trade.profit_loss is not None
+
+
+class IntrabarStrategy:
+    def __init__(self):
+        self.stop_loss_pct = 0.05
+        self.take_profit_pct = 0.05
+
+    def generate_signals(self, data):
+        return pd.Series({data.index[0]: TradeAction.ENTER_LONG.value})
+
+
+def make_intrabar_data():
+    index = [datetime(2024, 1, 1), datetime(2024, 1, 2)]
+    return pd.DataFrame(
+        {
+            "open": [100, 100],
+            "high": [100, 110],
+            "low": [100, 90],
+            "close": [100, 95],
+            "volume": [1000, 1000],
+        },
+        index=index,
+    )
+
+
+def test_intrabar_path_modeling():
+    data = make_intrabar_data()
+    sm = StrategyManager(data, initial_capital=100, risk_per_trade=0.1, intrabar_path=True)
+    sm.execute_strategy(IntrabarStrategy())
+    trade = sm.trades[0]
+    assert trade.exit_price == 105
